@@ -73,19 +73,36 @@ Expected output:
 
 ### 4. Index Textbook Content
 
-Index all markdown files from `../docs` into Qdrant vector database:
+Index all markdown files from `../docs` into Qdrant vector database.
+
+**Recommended: Use the new `index_docs.py` script** (supports dry-run and CLI options):
+
+```bash
+cd backend
+
+# Test first with dry-run (no API calls)
+uv run python -m scripts.index_docs --dry-run
+
+# Test with limited documents
+uv run python -m scripts.index_docs --limit 5
+
+# Full indexing
+uv run python -m scripts.index_docs
+```
+
+**Alternative: Legacy script** (no CLI options):
 
 ```bash
 cd backend
 uv run python scripts/index_textbook.py
 ```
 
-This script will:
+Both scripts will:
 - Discover all `.md` and `.mdx` files in the `../docs` directory
 - Extract sections by heading (# and ##)
-- Chunk text into ~500 token chunks with 50 token overlap
+- Chunk text into 200-500 token chunks with 50 token overlap
 - Generate embeddings using OpenAI `text-embedding-3-small`
-- Upload to Qdrant with metadata (doc_path, heading, chunk_text)
+- Upload to Qdrant with metadata (doc_path, module_id, heading, chunk_text)
 
 **Progress output:**
 ```
