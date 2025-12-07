@@ -6,7 +6,7 @@ from fastapi import APIRouter
 from sqlalchemy import text
 
 from app.api.deps import SettingsDep, DBDep, QdrantDep
-from app.services.qdrant_client import test_qdrant_connection
+from app.services.qdrant import get_qdrant_client
 
 router = APIRouter()
 
@@ -36,7 +36,29 @@ async def health_check(settings: SettingsDep, db: DBDep, qdrant: QdrantDep):
         db_status = f"error: {str(e)[:50]}"
 
     # Test Qdrant connection
-    qdrant_connected, qdrant_status = test_qdrant_connection()
+    qdrant_status = "disconnected"
+    qdrant_connected = False
+    try:
+        client = get_qdrant_client()
+        collections = client.get_collections()
+
+        # Check if our collection exists
+        collection_exists = any(
+            c.name == settings.QDRANT_COLLECTION
+            for c in collections.collections
+        )
+
+        if collection_exists:
+            collection_info = client.get_collection(settings.QDRANT_COLLECTION)
+            point_count = collection_info.points_count
+            qdrant_status = f"connected (collection: {settings.QDRANT_COLLECTION}, points: {point_count})"
+        else:
+            qdrant_status = f"connected (collection '{settings.QDRANT_COLLECTION}' not found)"
+
+        qdrant_connected = True
+    except Exception as e:
+        qdrant_status = f"error: {str(e)[:50]}"
+        qdrant_connected = False
 
     # Overall health: healthy if both DB and Qdrant are connected
     overall_status = "healthy" if (db_status == "connected" and qdrant_connected) else "degraded"

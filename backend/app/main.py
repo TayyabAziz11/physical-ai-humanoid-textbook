@@ -10,7 +10,7 @@ from app.api.v1.router import router as api_v1_router
 from app.core.config import get_settings
 from app.core.logging import setup_logging
 from app.core.security import get_cors_config
-from app.services.qdrant_client import close_qdrant_client
+from app.services.qdrant import close_qdrant_client
 
 
 # Initialize settings and logging

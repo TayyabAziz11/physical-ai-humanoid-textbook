@@ -16,7 +16,7 @@ from qdrant_client import QdrantClient
 from app.core.config import Settings, get_settings as _get_settings
 from app.core.logging import get_logger
 from app.db.session import get_db as _get_db
-from app.services.qdrant_client import get_qdrant_client
+from app.services.qdrant import get_qdrant_client
 
 
 @lru_cache
