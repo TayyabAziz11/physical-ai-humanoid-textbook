@@ -1,0 +1,75 @@
+.tooltip {
+  position: fixed;
+  z-index: 1050;
+  pointer-events: all;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  padding: 0.5rem 0.875rem;
+
+  background-color: var(--ifm-color-primary);
+  color: var(--ifm-color-primary-contrast-foreground);
+
+  border: none;
+  border-radius: 6px;
+
+  font-size: 0.875rem;
+  font-weight: 500;
+
+  cursor: pointer;
+
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2),
+              0 1px 3px rgba(0, 0, 0, 0.15);
+
+  transition: all 0.2s ease-in-out;
+  white-space: nowrap;
+}
+
+.button:hover {
+  background-color: var(--ifm-color-primary-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25),
+              0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.button:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+.icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.label {
+  line-height: 1;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .button {
+    padding: 0.625rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  .icon {
+    font-size: 1.1rem;
+  }
+}

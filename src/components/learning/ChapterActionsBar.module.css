@@ -1,0 +1,98 @@
+.container {
+  margin-bottom: 2rem;
+  padding: 1rem;
+  background-color: var(--ifm-background-surface-color);
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 8px;
+}
+
+.buttonGroup {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.actionButton {
+  padding: 0.625rem 1.25rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--ifm-color-primary-contrast-foreground);
+  background-color: var(--ifm-color-primary);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.actionButton:hover {
+  background-color: var(--ifm-color-primary-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.actionButton:active {
+  transform: translateY(0);
+}
+
+.banner {
+  margin-top: 1rem;
+  padding: 0.875rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background-color: var(--ifm-color-info-contrast-background);
+  border-left: 4px solid var(--ifm-color-info);
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.bannerIcon {
+  flex-shrink: 0;
+  font-size: 1.2rem;
+}
+
+.bannerText {
+  flex: 1;
+  color: var(--ifm-font-color-base);
+}
+
+.closeBanner {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  color: var(--ifm-color-emphasis-600);
+  cursor: pointer;
+  padding: 0.25rem;
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+.closeBanner:hover {
+  color: var(--ifm-color-emphasis-800);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .container {
+    padding: 0.875rem;
+  }
+
+  .buttonGroup {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .actionButton {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .banner {
+    padding: 0.75rem;
+    font-size: 0.85rem;
+  }
+}
