@@ -15,10 +15,11 @@ const config: Config = {
   },
 
   // GitHub Pages deployment config
-  url: 'https://Psqasim.github.io',
+  url: 'https://TayyabAziz11.github.io',
   baseUrl: '/physical-ai-humanoid-textbook/',
-  organizationName: 'Psqasim',
+  organizationName: 'TayyabAziz11',
   projectName: 'physical-ai-humanoid-textbook',
+  deploymentBranch: 'gh-pages',
   trailingSlash: false,
 
   onBrokenLinks: 'throw',

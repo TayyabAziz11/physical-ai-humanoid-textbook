@@ -1,16 +1,31 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from './ChatPanelPlaceholder.module.css';
 
 export interface ChatPanelPlaceholderProps {
   isOpen: boolean;
   onClose: () => void;
   className?: string;
+  selectedText?: string;
+  initialMode?: 'whole-book' | 'selection';
 }
 
 type ChatMode = 'whole-book' | 'selection';
 
-export default function ChatPanelPlaceholder({ isOpen, onClose, className }: ChatPanelPlaceholderProps): JSX.Element {
-  const [mode, setMode] = useState<ChatMode>('whole-book');
+export default function ChatPanelPlaceholder({
+  isOpen,
+  onClose,
+  className,
+  selectedText = '',
+  initialMode = 'whole-book'
+}: ChatPanelPlaceholderProps): JSX.Element {
+  const [mode, setMode] = useState<ChatMode>(initialMode);
+
+  // Update mode when initialMode prop changes
+  useEffect(() => {
+    if (isOpen) {
+      setMode(initialMode);
+    }
+  }, [isOpen, initialMode]);
 
   if (!isOpen) {
     return null;
@@ -51,13 +66,23 @@ export default function ChatPanelPlaceholder({ isOpen, onClose, className }: Cha
 
         {/* Placeholder content */}
         <div className={styles.content}>
+          {/* Show selected text context if in selection mode and text exists */}
+          {mode === 'selection' && selectedText && (
+            <div className={styles.selectedTextContext}>
+              <div className={styles.contextLabel}>📝 Selected Text:</div>
+              <div className={styles.contextText}>"{selectedText}"</div>
+            </div>
+          )}
+
           <div className={styles.placeholderMessage}>
             <div className={styles.iconLarge}>🚧</div>
             <h3 className={styles.placeholderTitle}>Coming Soon</h3>
             <p className={styles.placeholderText}>
               {mode === 'whole-book'
                 ? 'Chatbot backend not connected yet. Soon you\'ll be able to ask questions about any topic in the entire textbook.'
-                : 'Chatbot backend not connected yet. Soon you\'ll be able to select text and ask specific questions about it.'
+                : selectedText
+                  ? 'Chatbot backend not connected yet. Soon you\'ll be able to ask questions about the selected text above.'
+                  : 'Chatbot backend not connected yet. Soon you\'ll be able to select text and ask specific questions about it.'
               }
             </p>
             <div className={styles.featureList}>
