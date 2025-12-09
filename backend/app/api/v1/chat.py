@@ -13,7 +13,7 @@ from sqlalchemy.orm import selectinload
 from app.api.deps import SettingsDep, DBDep
 from app.models.schemas import ChatRequest, ChatResponse, ErrorResponse
 from app.models.database import ChatSession, ChatMessage, ChatMode, MessageRole
-from app.services.rag import rag_query
+from app.services.rag import answer_chat_request
 from app.core.logging import get_logger
 from app.core.security import sanitize_user_input, validate_question
 
@@ -217,13 +217,22 @@ async def chat(
 
         # Execute RAG query
         logger.info("Executing RAG query...")
-        answer, citations = rag_query(
+        # Build modified request for answer_chat_request
+        modified_request = ChatRequest(
             question=question,
             mode=request.mode,
             selected_text=selected_text,
             doc_path=doc_path,
-            conversation_history=conversation_history if conversation_history else None
+            session_id=str(session.id),
+            user_id=request.user_id
         )
+        response = await answer_chat_request(
+            request=modified_request,
+            db=db,
+            settings=settings
+        )
+        answer = response.answer
+        citations = response.citations
 
         # Save messages to database
         await save_messages(

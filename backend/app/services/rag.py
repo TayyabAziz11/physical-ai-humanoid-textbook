@@ -1,87 +1,32 @@
 """
 RAG (Retrieval-Augmented Generation) service
 
-Handles semantic search, context assembly, and chat completion for the Study Assistant.
+Implements the core RAG pipeline: retrieve relevant chunks, assemble context,
+and generate answers using OpenAI chat model.
 """
-from typing import List, Tuple, Optional
+from typing import List, Optional
 from openai import OpenAI
-from qdrant_client import QdrantClient
-from qdrant_client.models import ScoredPoint
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import get_settings
+from app.core.config import Settings
 from app.core.logging import get_logger
-from app.models.schemas import Citation
+from app.models.schemas import ChatRequest, ChatResponse, Citation
+from app.services.embeddings import embed_text
+from app.services.qdrant import search_similar
+from app.services.chat_storage import get_conversation_history
 
 logger = get_logger(__name__)
 
 
-def generate_query_embedding(question: str, openai_client: OpenAI, model: str) -> List[float]:
-    """
-    Generate embedding vector for search query
-
-    Args:
-        question: User's question
-        openai_client: OpenAI client
-        model: Embedding model name
-
-    Returns:
-        Embedding vector (list of floats)
-    """
-    response = openai_client.embeddings.create(
-        input=question,
-        model=model
-    )
-    return response.data[0].embedding
-
-
-def semantic_search(
-    question: str,
-    qdrant_client: QdrantClient,
-    openai_client: OpenAI,
-    collection_name: str,
-    embedding_model: str,
-    top_k: int = 7
-) -> List[ScoredPoint]:
-    """
-    Perform semantic search to find relevant textbook chunks
-
-    Args:
-        question: User's question
-        qdrant_client: Qdrant client
-        openai_client: OpenAI client
-        collection_name: Qdrant collection name
-        embedding_model: OpenAI embedding model name
-        top_k: Number of chunks to retrieve
-
-    Returns:
-        List of scored points (chunks with relevance scores)
-    """
-    # Generate query embedding
-    logger.info(f"Generating embedding for question: {question[:50]}...")
-    query_vector = generate_query_embedding(question, openai_client, embedding_model)
-
-    # Search Qdrant
-    logger.info(f"Searching Qdrant collection '{collection_name}' (top_k={top_k})...")
-    search_results = qdrant_client.search(
-        collection_name=collection_name,
-        query_vector=query_vector,
-        limit=top_k,
-        with_payload=True
-    )
-
-    logger.info(f"Retrieved {len(search_results)} chunks")
-    return search_results
-
-
 def assemble_context_and_citations(
-    search_results: List[ScoredPoint],
+    search_results: list,
     max_context_length: int = 6000
-) -> Tuple[str, List[Citation]]:
+) -> tuple[str, List[Citation]]:
     """
     Assemble context from retrieved chunks and generate citations
 
     Args:
-        search_results: List of scored points from Qdrant search
+        search_results: List of ScoredPoint from Qdrant search
         max_context_length: Maximum context length in characters
 
     Returns:
@@ -97,7 +42,6 @@ def assemble_context_and_citations(
         chunk_text = payload.get("chunk_text", "")
         doc_path = payload.get("doc_path", "")
         heading = payload.get("heading", "")
-        doc_title = payload.get("doc_title", "")
 
         # Add chunk to context
         chunk_part = f"[Source {idx}] {heading}\n{chunk_text}\n"
@@ -129,40 +73,118 @@ def assemble_context_and_citations(
             citations.append(citation)
 
     context_text = "\n".join(context_parts)
-    logger.info(f"Assembled context: {current_length} chars, {len(citations)} unique citations")
+    logger.info(f"Assembled context: {current_length} chars, {len(citations)} citations")
 
     return context_text, citations
 
 
-def generate_chat_completion(
-    question: str,
-    context: str,
-    conversation_history: Optional[List[dict]] = None,
-    openai_client: OpenAI = None,
-    chat_model: str = "gpt-4-turbo-preview"
-) -> str:
+async def answer_chat_request(
+    request: ChatRequest,
+    db: AsyncSession,
+    settings: Settings
+) -> ChatResponse:
     """
-    Generate chat completion using OpenAI with RAG context
+    Main RAG pipeline: retrieve relevant chunks and generate answer
 
     Args:
-        question: User's current question
-        context: Retrieved context from vector search
-        conversation_history: Previous messages in conversation (optional)
-        openai_client: OpenAI client
-        chat_model: OpenAI chat model name
+        request: Chat request with question, mode, and optional context
+        db: Database session (for conversation history)
+        settings: Application settings
 
     Returns:
-        AI-generated answer
+        ChatResponse with answer and citations
+
+    Raises:
+        ValueError: If mode is invalid or required fields missing
     """
-    # System prompt
+    logger.info(f"Processing chat request: mode={request.mode}, question_len={len(request.question)}")
+
+    # Initialize OpenAI client
+    openai_client = OpenAI(api_key=settings.OPENAI_API_KEY)
+
+    # Get session for conversation history (if available)
+    session = None
+    if request.session_id and request.user_id:
+        # Import here to avoid circular dependency
+        from app.services.chat_storage import get_or_create_session
+        session = await get_or_create_session(
+            request.session_id,
+            request.user_id,
+            request.mode,
+            db
+        )
+
+    # Get conversation history
+    conversation_history = await get_conversation_history(session, db, limit=10)
+
+    # === MODE: WHOLE-BOOK ===
+    if request.mode == "whole-book":
+        logger.info("Processing in whole-book mode")
+
+        # 1. Embed the question
+        logger.info("Generating embedding for question...")
+        query_vector = await embed_text(request.question)
+
+        # 2. Search Qdrant across whole collection
+        logger.info(f"Searching Qdrant (top_k={settings.RAG_TOP_K_CHUNKS})...")
+        search_results = search_similar(
+            query_vector=query_vector,
+            limit=settings.RAG_TOP_K_CHUNKS
+        )
+
+        logger.info(f"Retrieved {len(search_results)} chunks")
+
+        # 3. Assemble context and citations
+        context, citations = assemble_context_and_citations(search_results)
+
+    # === MODE: SELECTION ===
+    elif request.mode == "selection":
+        logger.info("Processing in selection mode")
+
+        # Validate required fields
+        if not request.selected_text:
+            raise ValueError("selected_text is required for selection mode")
+
+        # Option 1: Use selected text directly as context (simpler)
+        # This avoids the need to search and is more direct
+        context = f"Selected passage from {request.doc_path or 'textbook'}:\n\n{request.selected_text}"
+
+        # Create citation from selection
+        citations = [
+            Citation(
+                doc_path=request.doc_path or "unknown",
+                heading="Selected Text",
+                snippet=request.selected_text[:150] + ("..." if len(request.selected_text) > 150 else "")
+            )
+        ]
+
+        logger.info(f"Using selected text as context ({len(request.selected_text)} chars)")
+
+        # Option 2: Search within filtered subset (more sophisticated)
+        # Uncomment this block if you want to also search for related chunks
+        # if request.doc_path:
+        #     query_vector = await embed_text(request.question)
+        #     search_results = search_similar(
+        #         query_vector=query_vector,
+        #         limit=settings.RAG_TOP_K_CHUNKS,
+        #         doc_path_filter=request.doc_path
+        #     )
+        #     additional_context, additional_citations = assemble_context_and_citations(search_results)
+        #     context += "\n\n" + additional_context
+        #     citations.extend(additional_citations)
+
+    else:
+        raise ValueError(f"Invalid mode: {request.mode}")
+
+    # === BUILD PROMPT ===
     system_prompt = """You are an expert Study Assistant for the Physical AI & Humanoid Robotics Textbook.
 
 Your role:
 - Answer questions accurately using ONLY the provided context from the textbook
-- If the context doesn't contain enough information, say so clearly
+- If the context doesn't contain enough information, clearly say: "This topic is not covered in the provided section" or "I don't have enough information to answer this question based on the textbook content"
 - Be concise but thorough
 - Use technical terms correctly
-- Reference source sections when helpful (e.g., "According to the ROS 2 Basics section...")
+- Reference source sections when helpful
 
 Guidelines:
 - DO NOT make up information not in the context
@@ -171,12 +193,12 @@ Guidelines:
 - Format code snippets with proper markdown (```language)
 - Use bullet points and numbered lists for clarity"""
 
-    # Build messages
+    # Build messages for OpenAI
     messages = [
         {"role": "system", "content": system_prompt}
     ]
 
-    # Add conversation history if exists
+    # Add conversation history if available
     if conversation_history:
         messages.extend(conversation_history)
 
@@ -187,88 +209,34 @@ Guidelines:
 
 ---
 
-Question: {question}"""
+Question: {request.question}"""
 
     messages.append({"role": "user", "content": user_message})
 
-    # Generate completion
-    logger.info(f"Generating chat completion with model {chat_model}...")
-    response = openai_client.chat.completions.create(
-        model=chat_model,
-        messages=messages,
-        temperature=0.7,
-        max_tokens=1000
-    )
+    # === CALL OPENAI CHAT API ===
+    logger.info(f"Generating answer with {settings.OPENAI_CHAT_MODEL}...")
 
-    answer = response.choices[0].message.content
-    logger.info(f"Generated answer: {len(answer)} chars")
-
-    return answer
-
-
-def rag_query(
-    question: str,
-    mode: str = "whole-book",
-    selected_text: Optional[str] = None,
-    doc_path: Optional[str] = None,
-    conversation_history: Optional[List[dict]] = None
-) -> Tuple[str, List[Citation]]:
-    """
-    Execute full RAG pipeline: search → assemble context → generate answer
-
-    Args:
-        question: User's question
-        mode: "whole-book" or "selection"
-        selected_text: Selected text (for selection mode)
-        doc_path: Document path (for selection mode)
-        conversation_history: Previous messages in conversation
-
-    Returns:
-        Tuple of (answer, citations)
-    """
-    settings = get_settings()
-
-    # Initialize clients
-    from app.services.qdrant_client import get_qdrant_client
-    qdrant_client = get_qdrant_client()
-    openai_client = OpenAI(api_key=settings.OPENAI_API_KEY)
-
-    if mode == "whole-book":
-        # Semantic search across entire textbook
-        search_results = semantic_search(
-            question=question,
-            qdrant_client=qdrant_client,
-            openai_client=openai_client,
-            collection_name=settings.QDRANT_COLLECTION,
-            embedding_model=settings.OPENAI_EMBEDDING_MODEL,
-            top_k=settings.RAG_TOP_K_CHUNKS
+    try:
+        response = openai_client.chat.completions.create(
+            model=settings.OPENAI_CHAT_MODEL,
+            messages=messages,
+            temperature=0.7,
+            max_tokens=1000
         )
 
-        # Assemble context and citations
-        context, citations = assemble_context_and_citations(search_results)
+        answer = response.choices[0].message.content
+        logger.info(f"Generated answer: {len(answer)} chars")
 
-    elif mode == "selection":
-        # Use selected text directly as context
-        logger.info("Using selection mode with provided text")
-        context = f"Selected passage from {doc_path}:\n\n{selected_text}"
-        citations = [
-            Citation(
-                doc_path=doc_path or "unknown",
-                heading="Selected Text",
-                snippet=selected_text[:150] + ("..." if len(selected_text) > 150 else "")
-            )
-        ]
+    except Exception as e:
+        logger.error(f"OpenAI API error: {e}")
+        raise
 
-    else:
-        raise ValueError(f"Invalid mode: {mode}")
-
-    # Generate answer
-    answer = generate_chat_completion(
-        question=question,
-        context=context,
-        conversation_history=conversation_history,
-        openai_client=openai_client,
-        chat_model=settings.OPENAI_CHAT_MODEL
+    # === CONSTRUCT RESPONSE ===
+    chat_response = ChatResponse(
+        answer=answer,
+        citations=citations,
+        mode=request.mode,
+        session_id=str(session.id) if session else ""
     )
 
-    return answer, citations
+    return chat_response
