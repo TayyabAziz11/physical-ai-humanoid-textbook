@@ -75,7 +75,7 @@ const config: Config = {
           position: 'left',
         },
         {
-          href: 'https://github.com/Psqasim',
+          href: 'https://github.com/TayyabAziz11',
           label: 'GitHub',
           position: 'right',
         },
@@ -102,7 +102,11 @@ const config: Config = {
           items: [
             {
               label: 'GitHub',
-              href: 'https://github.com/Psqasim',
+              href: 'https://github.com/TayyabAziz11',
+            },
+            {
+              label: 'LinkedIn',
+              href: 'https://www.linkedin.com/in/tayyab-aziz-763a502b4/',
             },
           ],
         },
