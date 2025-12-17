@@ -12,7 +12,7 @@ from app.api.v1.router import router as api_v1_router
 from app.core.config import get_settings
 from app.core.logging import setup_logging
 from app.core.security import get_cors_config
-from app.services.qdrant import close_qdrant_client
+from app.services.qdrant import close_qdrant_client  # fixed qdrant.py includes this
 
 
 # Initialize settings and logging
@@ -34,7 +34,7 @@ async def lifespan(app: FastAPI):
 
     # Shutdown
     logger.info("Shutting down RAG Study Assistant API")
-    close_qdrant_client()
+    await close_qdrant_client()  # <- await the async function
     logger.info("Cleanup completed")
 
 
@@ -58,11 +58,12 @@ app.include_router(v1_chat.router, prefix="/api/v1", tags=["chat"])
 app.include_router(sessions.router, prefix="/api/v1", tags=["sessions"])
 app.include_router(api_chat.router, prefix="/api", tags=["chat"])
 
+
 @app.get("/")
 async def root():
     """Root endpoint"""
     return {
         "message": "RAG Study Assistant API",
-        "version": "0.1.0",
+        "version": settings.APP_VERSION,
         "docs": "/docs"
     }

@@ -4,23 +4,23 @@ Embeddings service
 Provides text embedding generation using OpenAI API.
 """
 from typing import List
-from openai import OpenAI, OpenAIError
+from openai import AsyncOpenAI, OpenAIError
 
 from app.core.config import get_settings
 from app.core.logging import get_logger
 
 logger = get_logger(__name__)
 
-# Lazy-initialized OpenAI client
+# Lazy-initialized OpenAI async client
 _openai_client = None
 
 
-def get_openai_client() -> OpenAI:
+def get_openai_client() -> AsyncOpenAI:
     """
-    Get or create OpenAI client (lazy initialization)
+    Get or create async OpenAI client (lazy initialization)
 
     Returns:
-        OpenAI: OpenAI client instance
+        AsyncOpenAI: Async OpenAI client instance
 
     Raises:
         ValueError: If OPENAI_API_KEY is not configured
@@ -38,8 +38,8 @@ def get_openai_client() -> OpenAI:
             "Please set it in your .env file or environment variables."
         )
 
-    logger.info("Initializing OpenAI client for embeddings")
-    _openai_client = OpenAI(api_key=settings.OPENAI_API_KEY)
+    logger.info("Initializing async OpenAI client for embeddings")
+    _openai_client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
 
     return _openai_client
 
@@ -72,8 +72,8 @@ async def embed_text(text: str) -> List[float]:
     try:
         logger.debug(f"Generating embedding for text (length: {len(text)} chars)")
 
-        # Generate embedding
-        response = client.embeddings.create(
+        # Generate embedding (await for async client)
+        response = await client.embeddings.create(
             input=text.strip(),
             model=settings.OPENAI_EMBEDDING_MODEL
         )
@@ -127,8 +127,8 @@ async def embed_batch(texts: List[str]) -> List[List[float]]:
     try:
         logger.debug(f"Generating embeddings for {len(valid_texts)} texts")
 
-        # Generate embeddings in batch
-        response = client.embeddings.create(
+        # Generate embeddings in batch (await for async client)
+        response = await client.embeddings.create(
             input=valid_texts,
             model=settings.OPENAI_EMBEDDING_MODEL
         )

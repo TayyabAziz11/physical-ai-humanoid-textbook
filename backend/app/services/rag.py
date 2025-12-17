@@ -1,242 +1,182 @@
 """
-RAG (Retrieval-Augmented Generation) service
+RAG (Retrieval-Augmented Generation) pipeline for Study Assistant.
 
-Implements the core RAG pipeline: retrieve relevant chunks, assemble context,
-and generate answers using OpenAI chat model.
+Implements:
+1. Retrieve relevant chunks from Qdrant based on user question
+2. Build context from retrieved chunks
+3. Generate answer using OpenAI chat model
+4. Extract citations from retrieved chunks
+
+Modes:
+- whole-book: search entire textbook
+- selection: use selected text and nearby chunks
 """
-from typing import List, Optional
-from openai import OpenAI
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import Settings
+from typing import List
+from sqlalchemy.ext.asyncio import AsyncSession
+from openai import AsyncOpenAI
+
+from app.core.config import Settings, settings
 from app.core.logging import get_logger
 from app.models.schemas import ChatRequest, ChatResponse, Citation
 from app.services.embeddings import embed_text
-from app.services.qdrant import search_similar
-from app.services.chat_storage import get_conversation_history
+from app.services.qdrant import search_similar, SearchResult
 
 logger = get_logger(__name__)
 
+# System prompt template
+SYSTEM_PROMPT = """You are a helpful AI tutor for the Physical AI & Humanoid Robotics textbook.
 
-def assemble_context_and_citations(
-    search_results: list,
-    max_context_length: int = 6000
-) -> tuple[str, List[Citation]]:
-    """
-    Assemble context from retrieved chunks and generate citations
-
-    Args:
-        search_results: List of ScoredPoint from Qdrant search
-        max_context_length: Maximum context length in characters
-
-    Returns:
-        Tuple of (context_text, citations_list)
-    """
-    context_parts = []
-    citations = []
-    seen_sources = set()  # Track unique sources for citations
-    current_length = 0
-
-    for idx, point in enumerate(search_results, 1):
-        payload = point.payload
-        chunk_text = payload.get("chunk_text", "")
-        doc_path = payload.get("doc_path", "")
-        heading = payload.get("heading", "")
-
-        # Add chunk to context
-        chunk_part = f"[Source {idx}] {heading}\n{chunk_text}\n"
-        chunk_length = len(chunk_part)
-
-        # Stop if we exceed max context length
-        if current_length + chunk_length > max_context_length:
-            logger.info(f"Context limit reached ({current_length}/{max_context_length} chars)")
-            break
-
-        context_parts.append(chunk_part)
-        current_length += chunk_length
-
-        # Create citation (deduplicate by doc_path + heading)
-        source_key = f"{doc_path}::{heading}"
-        if source_key not in seen_sources:
-            seen_sources.add(source_key)
-
-            # Create snippet (first 100-150 chars of chunk)
-            snippet = chunk_text[:150].strip()
-            if len(chunk_text) > 150:
-                snippet += "..."
-
-            citation = Citation(
-                doc_path=doc_path,
-                heading=heading,
-                snippet=snippet
-            )
-            citations.append(citation)
-
-    context_text = "\n".join(context_parts)
-    logger.info(f"Assembled context: {current_length} chars, {len(citations)} citations")
-
-    return context_text, citations
-
-
-async def answer_chat_request(
-    request: ChatRequest,
-    db: AsyncSession,
-    settings: Settings
-) -> ChatResponse:
-    """
-    Main RAG pipeline: retrieve relevant chunks and generate answer
-
-    Args:
-        request: Chat request with question, mode, and optional context
-        db: Database session (for conversation history)
-        settings: Application settings
-
-    Returns:
-        ChatResponse with answer and citations
-
-    Raises:
-        ValueError: If mode is invalid or required fields missing
-    """
-    logger.info(f"Processing chat request: mode={request.mode}, question_len={len(request.question)}")
-
-    # Initialize OpenAI client
-    openai_client = OpenAI(api_key=settings.OPENAI_API_KEY)
-
-    # Get session for conversation history (if available)
-    session = None
-    if request.session_id and request.user_id:
-        # Import here to avoid circular dependency
-        from app.services.chat_storage import get_or_create_session
-        session = await get_or_create_session(
-            request.session_id,
-            request.user_id,
-            request.mode,
-            db
-        )
-
-    # Get conversation history
-    conversation_history = await get_conversation_history(session, db, limit=10)
-
-    # === MODE: WHOLE-BOOK ===
-    if request.mode == "whole-book":
-        logger.info("Processing in whole-book mode")
-
-        # 1. Embed the question
-        logger.info("Generating embedding for question...")
-        query_vector = await embed_text(request.question)
-
-        # 2. Search Qdrant across whole collection
-        logger.info(f"Searching Qdrant (top_k={settings.RAG_TOP_K_CHUNKS})...")
-        search_results = search_similar(
-            query_vector=query_vector,
-            limit=settings.RAG_TOP_K_CHUNKS
-        )
-
-        logger.info(f"Retrieved {len(search_results)} chunks")
-
-        # 3. Assemble context and citations
-        context, citations = assemble_context_and_citations(search_results)
-
-    # === MODE: SELECTION ===
-    elif request.mode == "selection":
-        logger.info("Processing in selection mode")
-
-        # Validate required fields
-        if not request.selected_text:
-            raise ValueError("selected_text is required for selection mode")
-
-        # Option 1: Use selected text directly as context (simpler)
-        # This avoids the need to search and is more direct
-        context = f"Selected passage from {request.doc_path or 'textbook'}:\n\n{request.selected_text}"
-
-        # Create citation from selection
-        citations = [
-            Citation(
-                doc_path=request.doc_path or "unknown",
-                heading="Selected Text",
-                snippet=request.selected_text[:150] + ("..." if len(request.selected_text) > 150 else "")
-            )
-        ]
-
-        logger.info(f"Using selected text as context ({len(request.selected_text)} chars)")
-
-        # Option 2: Search within filtered subset (more sophisticated)
-        # Uncomment this block if you want to also search for related chunks
-        # if request.doc_path:
-        #     query_vector = await embed_text(request.question)
-        #     search_results = search_similar(
-        #         query_vector=query_vector,
-        #         limit=settings.RAG_TOP_K_CHUNKS,
-        #         doc_path_filter=request.doc_path
-        #     )
-        #     additional_context, additional_citations = assemble_context_and_citations(search_results)
-        #     context += "\n\n" + additional_context
-        #     citations.extend(additional_citations)
-
-    else:
-        raise ValueError(f"Invalid mode: {request.mode}")
-
-    # === BUILD PROMPT ===
-    system_prompt = """You are an expert Study Assistant for the Physical AI & Humanoid Robotics Textbook.
-
-Your role:
-- Answer questions accurately using ONLY the provided context from the textbook
-- If the context doesn't contain enough information, clearly say: "This topic is not covered in the provided section" or "I don't have enough information to answer this question based on the textbook content"
-- Be concise but thorough
-- Use technical terms correctly
-- Reference source sections when helpful
-
-Guidelines:
-- DO NOT make up information not in the context
-- DO NOT use knowledge outside the provided textbook context
-- If the question is unclear, ask for clarification
-- Format code snippets with proper markdown (```language)
-- Use bullet points and numbered lists for clarity"""
-
-    # Build messages for OpenAI
-    messages = [
-        {"role": "system", "content": system_prompt}
-    ]
-
-    # Add conversation history if available
-    if conversation_history:
-        messages.extend(conversation_history)
-
-    # Add current question with context
-    user_message = f"""Context from textbook:
-
+CONTEXT FROM TEXTBOOK:
 {context}
 
----
+INSTRUCTIONS:
+1. Answer the user's question using ONLY the information provided in the context above.
+2. If the context contains information relevant to the question, use it to provide a detailed answer.
+3. If the user question is vague or unclear, explain the main concepts in the provided context.
+4. Cite specific sections when possible.
+5. If the context does NOT contain enough information to answer, politely say:
+   "I don't have enough information about that specific topic in the provided sections."
+6. Use clear, educational language appropriate for students learning robotics.
+7. Format your answer in clear paragraphs (2-4 paragraphs typically), not bullet points unless specifically asked.
+"""
 
-Question: {request.question}"""
+# -------------------
+# RAG Retrieval
+# -------------------
+async def retrieve_chunks_whole_book(
+    question: str,
+    limit: int = 10,
+) -> List[SearchResult]:
+    logger.info(f"Retrieving chunks for whole-book mode (limit={limit})")
+    query_vector = await embed_text(question)
+    results = await search_similar(query_vector=query_vector, limit=limit)
+    logger.info(f"Retrieved {len(results)} chunks from Qdrant")
+    return results
 
-    messages.append({"role": "user", "content": user_message})
 
-    # === CALL OPENAI CHAT API ===
-    logger.info(f"Generating answer with {settings.OPENAI_CHAT_MODEL}...")
+async def retrieve_chunks_selection(
+    question: str,
+    selected_text: str,
+    doc_path: str,
+    limit: int = 5,
+) -> List[SearchResult]:
+    logger.info(f"Retrieving chunks for selection mode (doc={doc_path}, limit={limit})")
+    query_vector = await embed_text(selected_text)
+    results = await search_similar(query_vector=query_vector, limit=limit, doc_path=doc_path)
 
+    if not results:
+        logger.warning(f"No chunks found in {doc_path}, falling back to whole-book mode")
+        results = await retrieve_chunks_whole_book(question, limit=limit)
+
+    logger.info(f"Retrieved {len(results)} chunks (selection mode)")
+    return results
+
+# -------------------
+# Context & Citations
+# -------------------
+def build_context(chunks: List[SearchResult]) -> str:
+    context_parts = []
+    for i, chunk in enumerate(chunks, 1):
+        context_parts.append(f"""
+[Source {i}]
+Document: {chunk.doc_path}
+Section: {chunk.heading}
+Content: {chunk.text}
+---""".strip())
+    return "\n\n".join(context_parts)
+
+
+def extract_citations(chunks: List[SearchResult], max_citations: int = 5) -> List[Citation]:
+    citations = []
+    for chunk in chunks[:max_citations]:
+        snippet = chunk.text
+        if len(snippet) > 150:
+            cutoff = snippet[:150].rfind(". ")
+            snippet = snippet[:cutoff+1] if cutoff > 0 else snippet[:150] + "..."
+        citations.append(Citation(doc_path=chunk.doc_path, heading=chunk.heading, snippet=snippet))
+    return citations
+
+# -------------------
+# OpenAI Answer Generation (v2 SDK)
+# -------------------
+async def generate_answer(question: str, context: str, chat_model: str) -> str:
+    logger.info(f"Generating answer with model: {chat_model}")
     try:
-        response = openai_client.chat.completions.create(
-            model=settings.OPENAI_CHAT_MODEL,
-            messages=messages,
-            temperature=0.7,
-            max_tokens=1000
+        # Use AsyncOpenAI for async operations (OpenAI SDK v2+)
+        client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
+        response = await client.chat.completions.create(
+            model=chat_model,
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT.format(context=context)},
+                {"role": "user", "content": question},
+            ],
+            temperature=0.3,
+            max_tokens=800,
         )
-
         answer = response.choices[0].message.content
-        logger.info(f"Generated answer: {len(answer)} chars")
-
+        logger.info(f"Generated answer ({len(answer)} chars)")
+        return answer
     except Exception as e:
         logger.error(f"OpenAI API error: {e}")
         raise
 
-    # === CONSTRUCT RESPONSE ===
-    chat_response = ChatResponse(
-        answer=answer,
-        citations=citations,
-        mode=request.mode,
-        session_id=str(session.id) if session else ""
+# -------------------
+# Main RAG Pipeline
+# -------------------
+async def answer_chat_request(
+    request: ChatRequest,
+    db: AsyncSession,
+    settings: Settings | None = None,
+) -> ChatResponse:
+    # Import default settings if not provided
+    from app.core.config import settings as default_settings
+    config = settings or default_settings
+    logger.info(
+        f"Processing chat request: mode={request.mode}, question_len={len(request.question)}, "
+        f"user_id={getattr(request, 'user_id', 'anonymous')}"
     )
 
-    return chat_response
+    # Retrieve relevant chunks
+    if request.mode == "whole-book":
+        chunks = await retrieve_chunks_whole_book(
+            question=request.question, limit=config.RAG_TOP_K_CHUNKS
+        )
+    elif request.mode == "selection":
+        if not request.selected_text or not request.doc_path:
+            raise ValueError("mode='selection' requires both selected_text and doc_path")
+        chunks = await retrieve_chunks_selection(
+            question=request.question,
+            selected_text=request.selected_text,
+            doc_path=request.doc_path,
+            limit=min(config.RAG_TOP_K_CHUNKS, 5),
+        )
+    else:
+        raise ValueError(f"Invalid mode: {request.mode}")
+
+    if not chunks:
+        logger.warning("No relevant chunks found in Qdrant")
+        return ChatResponse(
+            answer="I couldn't find relevant information in the textbook to answer your question. Please try rephrasing or asking a different question.",
+            citations=[],
+            mode=request.mode,
+        )
+
+    # Build context
+    context = (
+        f"USER SELECTED TEXT:\n\n{request.selected_text}\n\nRELEVANT TEXTBOOK SECTIONS:\n\n{build_context(chunks)}"
+        if request.mode == "selection" and request.selected_text
+        else build_context(chunks)
+    )
+
+    # Generate answer
+    answer = await generate_answer(
+        question=request.question,
+        context=context,
+        chat_model=config.OPENAI_CHAT_MODEL,
+    )
+
+    # Extract citations
+    citations = extract_citations(chunks, max_citations=5)
+
+    return ChatResponse(answer=answer, citations=citations, mode=request.mode)

@@ -40,7 +40,7 @@ async def health_check(settings: SettingsDep, db: DBDep, qdrant: QdrantDep):
     qdrant_connected = False
     try:
         client = get_qdrant_client()
-        collections = client.get_collections()
+        collections = await client.get_collections()
 
         # Check if our collection exists
         collection_exists = any(
@@ -49,7 +49,7 @@ async def health_check(settings: SettingsDep, db: DBDep, qdrant: QdrantDep):
         )
 
         if collection_exists:
-            collection_info = client.get_collection(settings.QDRANT_COLLECTION)
+            collection_info = await client.get_collection(settings.QDRANT_COLLECTION)
             point_count = collection_info.points_count
             qdrant_status = f"connected (collection: {settings.QDRANT_COLLECTION}, points: {point_count})"
         else:
