@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Layout from '@theme/Layout';
-import ChatPanelPlaceholder from '@site/src/components/chat/ChatPanelPlaceholder';
+import ChatWidget from '@site/src/components/chat/ChatWidget';
 import styles from './chat.module.css';
 
 export default function ChatPage(): JSX.Element {
@@ -56,12 +56,12 @@ export default function ChatPage(): JSX.Element {
             Open Study Assistant
           </button>
           <p className={styles.ctaNote}>
-            Note: Backend integration coming soon. Currently showing UI placeholder.
+            Powered by GPT-4 and vector search through the entire textbook.
           </p>
         </div>
       </div>
 
-      <ChatPanelPlaceholder
+      <ChatWidget
         isOpen={isChatOpen}
         onClose={() => setIsChatOpen(false)}
       />

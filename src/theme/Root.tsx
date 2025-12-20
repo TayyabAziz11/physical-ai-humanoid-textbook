@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import AskTheTextbookButton from '@site/src/components/chat/AskTheTextbookButton';
-import ChatPanelPlaceholder from '@site/src/components/chat/ChatPanelPlaceholder';
+import ChatWidget from '@site/src/components/chat/ChatWidget';
 import TextSelectionTooltip from '@site/src/components/chat/TextSelectionTooltip';
 
 const MIN_SELECTION_LENGTH = 10;
@@ -107,7 +107,7 @@ export default function Root({ children }: { children: React.ReactNode }): JSX.E
       />
 
       {/* Chat panel */}
-      <ChatPanelPlaceholder
+      <ChatWidget
         isOpen={isChatOpen}
         onClose={handleChatClose}
         selectedText={selectedText}

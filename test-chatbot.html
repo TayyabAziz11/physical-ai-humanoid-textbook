@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot End-to-End Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #2e8555;
+            padding-bottom: 10px;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-item {
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 4px solid #ddd;
+            background: #f9f9f9;
+        }
+        .test-item.pass {
+            border-left-color: #28a745;
+            background: #f0fff4;
+        }
+        .test-item.fail {
+            border-left-color: #dc3545;
+            background: #fff0f0;
+        }
+        .test-item.running {
+            border-left-color: #ffc107;
+            background: #fffbf0;
+        }
+        .status {
+            font-weight: bold;
+            padding: 5px 10px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-left: 10px;
+        }
+        .status.pass { background: #28a745; color: white; }
+        .status.fail { background: #dc3545; color: white; }
+        .status.running { background: #ffc107; color: black; }
+        .details {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #666;
+            font-family: monospace;
+        }
+        button {
+            background: #2e8555;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #25744a;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .summary {
+            font-size: 18px;
+            font-weight: bold;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 20px;
+        }
+        .summary.pass { background: #28a745; color: white; }
+        .summary.fail { background: #dc3545; color: white; }
+        pre {
+            background: #f4f4f4;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🤖 Physical AI Chatbot - End-to-End Test Suite</h1>
+
+    <div class="test-section">
+        <h2>Test Configuration</h2>
+        <p><strong>Backend URL:</strong> <code id="backend-url">http://localhost:8000</code></p>
+        <p><strong>API Base URL:</strong> <code id="api-url">http://localhost:8000/api/v1</code></p>
+        <p><strong>Frontend URL:</strong> <code>http://localhost:3000/physical-ai-humanoid-textbook/</code></p>
+        <button onclick="runAllTests()">▶️ Run All Tests</button>
+        <button onclick="clearResults()">🗑️ Clear Results</button>
+    </div>
+
+    <div id="test-results"></div>
+
+    <div id="summary-section"></div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000/api/v1';
+        const BACKEND_BASE = 'http://localhost:8000';
+        let testResults = [];
+
+        function addTestResult(testName, status, details) {
+            testResults.push({ testName, status, details });
+
+            const resultsDiv = document.getElementById('test-results');
+            const testDiv = document.createElement('div');
+            testDiv.className = `test-item ${status}`;
+            testDiv.innerHTML = `
+                <strong>${testName}</strong>
+                <span class="status ${status}">${status.toUpperCase()}</span>
+                <div class="details">${details}</div>
+            `;
+            resultsDiv.appendChild(testDiv);
+
+            // Scroll to bottom
+            testDiv.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }
+
+        function updateSummary() {
+            const passed = testResults.filter(r => r.status === 'pass').length;
+            const failed = testResults.filter(r => r.status === 'fail').length;
+            const total = testResults.length;
+
+            const summaryDiv = document.getElementById('summary-section');
+            const allPassed = failed === 0 && total > 0;
+
+            summaryDiv.innerHTML = `
+                <div class="summary ${allPassed ? 'pass' : 'fail'}">
+                    📊 Test Summary: ${passed}/${total} tests passed ${failed > 0 ? `(${failed} failed)` : '✓'}
+                </div>
+            `;
+        }
+
+        function clearResults() {
+            document.getElementById('test-results').innerHTML = '';
+            document.getElementById('summary-section').innerHTML = '';
+            testResults = [];
+        }
+
+        async function testBackendHealth() {
+            addTestResult('1. Backend Health Check', 'running', 'Checking if backend is reachable...');
+
+            try {
+                const response = await fetch(`${BACKEND_BASE}/health`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    addTestResult('1. Backend Health Check', 'pass',
+                        `✓ Backend is healthy\nResponse: ${JSON.stringify(data, null, 2)}`);
+                    return true;
+                } else {
+                    addTestResult('1. Backend Health Check', 'fail',
+                        `✗ Backend returned ${response.status}`);
+                    return false;
+                }
+            } catch (error) {
+                addTestResult('1. Backend Health Check', 'fail',
+                    `✗ Error: ${error.message}`);
+                return false;
+            }
+        }
+
+        async function testGlobalQuery() {
+            addTestResult('2. Global Query (RAG Mode)', 'running', 'Sending global query...');
+
+            try {
+                const response = await fetch(`${API_BASE}/query/global`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        question: "What is physical AI?"
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const hasCitations = data.citations && data.citations.length > 0;
+
+                    addTestResult('2. Global Query (RAG Mode)', 'pass',
+                        `✓ Query successful\n` +
+                        `Answer length: ${data.answer.length} chars\n` +
+                        `Citations: ${data.citations ? data.citations.length : 0}\n` +
+                        `Sample answer: "${data.answer.substring(0, 100)}..."\n` +
+                        `${hasCitations ? '✓ Citations present' : '⚠️ No citations'}`
+                    );
+                    return true;
+                } else {
+                    const error = await response.json();
+                    addTestResult('2. Global Query (RAG Mode)', 'fail',
+                        `✗ Request failed: ${response.status}\n${JSON.stringify(error, null, 2)}`);
+                    return false;
+                }
+            } catch (error) {
+                addTestResult('2. Global Query (RAG Mode)', 'fail',
+                    `✗ Error: ${error.message}`);
+                return false;
+            }
+        }
+
+        async function testSelectionQuery() {
+            addTestResult('3. Selection Query Mode', 'running', 'Sending selection query...');
+
+            try {
+                const response = await fetch(`${API_BASE}/query/selection`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        question: "What is the main topic?",
+                        selected_text: "Physical AI combines artificial intelligence with physical embodiment, enabling robots to interact with the real world."
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const noCitations = !data.citations || data.citations.length === 0;
+
+                    addTestResult('3. Selection Query Mode', 'pass',
+                        `✓ Query successful\n` +
+                        `Answer length: ${data.answer.length} chars\n` +
+                        `Citations: ${data.citations ? data.citations.length : 0}\n` +
+                        `Sample answer: "${data.answer.substring(0, 100)}..."\n` +
+                        `${noCitations ? '✓ No citations (expected for selection mode)' : '⚠️ Citations present (unexpected)'}`
+                    );
+                    return true;
+                } else {
+                    const error = await response.json();
+                    addTestResult('3. Selection Query Mode', 'fail',
+                        `✗ Request failed: ${response.status}\n${JSON.stringify(error, null, 2)}`);
+                    return false;
+                }
+            } catch (error) {
+                addTestResult('3. Selection Query Mode', 'fail',
+                    `✗ Error: ${error.message}`);
+                return false;
+            }
+        }
+
+        async function testEmptyQuery() {
+            addTestResult('4. Error Handling (Empty Query)', 'running', 'Testing error handling...');
+
+            try {
+                const response = await fetch(`${API_BASE}/query/global`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        question: ""
+                    })
+                });
+
+                if (!response.ok) {
+                    addTestResult('4. Error Handling (Empty Query)', 'pass',
+                        `✓ Empty query properly rejected with status ${response.status}`);
+                    return true;
+                } else {
+                    addTestResult('4. Error Handling (Empty Query)', 'fail',
+                        `✗ Empty query should be rejected but was accepted`);
+                    return false;
+                }
+            } catch (error) {
+                addTestResult('4. Error Handling (Empty Query)', 'pass',
+                    `✓ Error properly handled: ${error.message}`);
+                return true;
+            }
+        }
+
+        async function testResponseTime() {
+            addTestResult('5. Performance Test', 'running', 'Testing response time...');
+
+            const startTime = Date.now();
+            try {
+                const response = await fetch(`${API_BASE}/query/global`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        question: "What are humanoid robots?"
+                    })
+                });
+
+                const endTime = Date.now();
+                const duration = endTime - startTime;
+
+                if (response.ok) {
+                    const performanceGrade = duration < 5000 ? 'pass' : 'fail';
+                    addTestResult('5. Performance Test', performanceGrade,
+                        `Response time: ${duration}ms\n` +
+                        `${duration < 5000 ? '✓ Within acceptable range (<5s)' : '⚠️ Slower than expected (>5s)'}`
+                    );
+                    return true;
+                } else {
+                    addTestResult('5. Performance Test', 'fail',
+                        `✗ Request failed after ${duration}ms`);
+                    return false;
+                }
+            } catch (error) {
+                addTestResult('5. Performance Test', 'fail',
+                    `✗ Error: ${error.message}`);
+                return false;
+            }
+        }
+
+        async function runAllTests() {
+            clearResults();
+
+            console.log('Starting test suite...');
+
+            const test1 = await testBackendHealth();
+            if (!test1) {
+                addTestResult('Test Suite', 'fail', 'Stopping tests - backend not reachable');
+                updateSummary();
+                return;
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await testGlobalQuery();
+
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await testSelectionQuery();
+
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await testEmptyQuery();
+
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await testResponseTime();
+
+            updateSummary();
+        }
+
+        // Auto-run tests on page load
+        window.addEventListener('load', () => {
+            console.log('Page loaded - ready to run tests');
+            setTimeout(() => {
+                console.log('Auto-running tests in 1 second...');
+                runAllTests();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

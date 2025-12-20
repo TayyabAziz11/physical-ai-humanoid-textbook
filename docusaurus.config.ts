@@ -56,6 +56,10 @@ const config: Config = {
       disableSwitch: false,
       respectPrefersColorScheme: true,
     },
+    // Custom configuration for ChatWidget
+    customFields: {
+      chatApiUrl: process.env.REACT_APP_API_URL || 'http://localhost:8000/api/v1',
+    },
     navbar: {
       title: 'Physical AI & Humanoid Robotics',
       logo: {
