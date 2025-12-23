@@ -10,7 +10,6 @@ import ChapterActionsBar from '@site/src/components/learning/ChapterActionsBar';
 
 <ChapterActionsBar />
 
-<<<<<<< HEAD
 ## Introduction: Why NVIDIA Isaac?
 
 Imagine you've built a beautiful ROS 2 system and created a digital twin in Gazebo. Everything works perfectly in simulation. But when you deploy to a real robot, you face these challenges:
@@ -28,6 +27,28 @@ This is where **NVIDIA Isaac** comes in. It's not a replacement for ROS 2—it's
 4. **Sim-to-Real Tools**: Domain randomization and synthetic data generation to bridge the simulation gap
 
 Think of Isaac as the "AI-Robot Brain" that makes your robot see, understand, and navigate the world at superhuman speed.
+
+---
+
+## Why NVIDIA Isaac Exists: The Problem It Solves
+
+You've learned ROS 2 for robot communication and Gazebo for simulation. So why do we need **NVIDIA Isaac**?
+
+**The challenge:** Physical AI requires:
+
+1. **Photorealistic simulation** for training vision models
+2. **GPU-accelerated perception** (object detection, SLAM, segmentation)
+3. **Synthetic data generation** at scale (millions of labeled images)
+4. **Sim-to-real transfer** with physics and visual accuracy
+5. **Hardware-accelerated inference** on edge devices (Jetson)
+
+Gazebo provides physics but lacks:
+- GPU ray tracing for realistic lighting
+- AI-native sensor simulation
+- Pre-built perception pipelines
+- Tight integration with NVIDIA hardware (Jetson, A100)
+
+**Isaac solves this** by providing a complete AI robotics platform optimized for NVIDIA GPUs.
 
 ---
 
@@ -566,27 +587,6 @@ You'll see:
 - SLAM running at 30 FPS
 - Power consumption: ~10W
 
-=======
-## Why NVIDIA Isaac Exists: The Problem It Solves
-
-You've learned ROS 2 for robot communication and Gazebo for simulation. So why do we need **NVIDIA Isaac**?
-
-**The challenge:** Physical AI requires:
-
-1. **Photorealistic simulation** for training vision models
-2. **GPU-accelerated perception** (object detection, SLAM, segmentation)
-3. **Synthetic data generation** at scale (millions of labeled images)
-4. **Sim-to-real transfer** with physics and visual accuracy
-5. **Hardware-accelerated inference** on edge devices (Jetson)
-
-Gazebo provides physics but lacks:
-- GPU ray tracing for realistic lighting
-- AI-native sensor simulation
-- Pre-built perception pipelines
-- Tight integration with NVIDIA hardware (Jetson, A100)
-
-**Isaac solves this** by providing a complete AI robotics platform optimized for NVIDIA GPUs.
-
 ### The Isaac Ecosystem
 
 NVIDIA Isaac is actually **two complementary platforms**:
@@ -1082,32 +1082,21 @@ Motor Commands (via ROS 2)
 Unitree G1 Humanoid
 ```
 
->>>>>>> 002-rag-backend-study-assistant
 ---
 
 ## Key Takeaways
 
-<<<<<<< HEAD
 1. **Isaac Sim** is for training and testing robots in photorealistic virtual environments
 2. **Isaac ROS** is for deploying GPU-accelerated perception on real robots (especially Jetson)
 3. **Domain randomization** bridges the sim-to-real gap by making models robust to variations
 4. **TensorRT** optimizes neural networks for 10-100x speedups on NVIDIA hardware
 5. **Jetson** is the embedded AI platform for power-efficient, real-time robotics
 6. Isaac integrates seamlessly with **ROS 2**—it's an enhancement, not a replacement
-=======
-1. **Isaac Sim** provides photorealistic simulation for training vision-based robots
-2. **Isaac ROS** provides GPU-accelerated perception for real-time deployment on Jetson
-3. **VSLAM** (Visual SLAM) lets robots localize and map using cameras
-4. **Nav2** handles path planning and obstacle avoidance
-5. **Sim-to-real** transfer is enabled through domain randomization, sensor noise, and physics calibration
-6. **Jetson** is NVIDIA's edge AI platform for deploying trained models on real robots
->>>>>>> 002-rag-backend-study-assistant
 
 ---
 
 ## Hands-On Practice
 
-<<<<<<< HEAD
 ### Exercise 1: Explore Isaac Sim Examples
 
 1. Install Isaac Sim via Omniverse Launcher
@@ -1140,64 +1129,21 @@ You're building a quadruped robot that needs to:
 - Operate for 2 hours on battery (power budget: 20W max)
 
 **Question:** Which Jetson model would you choose? Why?
-=======
-### Exercise 1: Isaac Sim Exploration
-
-Download and launch Isaac Sim. Open the "Simple Warehouse" example.
-
-**Tasks:**
-- Identify the robot, obstacles, and goal location
-- Press "Play" and observe the robot navigate
-- Pause and move an obstacle—does the robot re-plan?
-
-### Exercise 2: ROS 2 Topics
-
-With Isaac Sim running, list active ROS 2 topics:
-
-```bash
-ros2 topic list
-```
-
-**Question:** Which topics publish sensor data? Which accept commands?
-
-### Exercise 3: Synthetic Data
-
-In Isaac Sim, enable semantic segmentation for a scene with multiple objects.
-
-**Question:** How would you use this data to train an object detector?
-
-### Exercise 4: Sim-to-Real Thinking
-
-You train a robot in Isaac Sim to pick cups. On real hardware, it fails 50% of the time.
-
-**Question:** What might cause this? How would you improve sim-to-real transfer?
-
-**Hint:** Consider lighting, grip force, and object properties.
->>>>>>> 002-rag-backend-study-assistant
 
 ---
 
 ## Common Mistakes Beginners Make
 
-<<<<<<< HEAD
 1. **Not using domain randomization**: Training on a single scene in Isaac Sim leads to overfitting
 2. **Skipping TensorRT conversion**: Running PyTorch models directly on Jetson is 10x slower
 3. **Ignoring sensor parameters**: Isaac Sim's default camera settings may not match your real camera (fix: calibrate and match intrinsics)
 4. **Overloading Jetson**: Running too many models simultaneously causes thermal throttling
 5. **Forgetting ROS 2 Bridge setup**: Isaac Sim won't communicate with ROS 2 unless the bridge extension is enabled
-=======
-1. **Skipping domain randomization**: Model overfits to specific sim environment
-2. **Not matching real sensor specs**: Simulated camera has different FOV/resolution than real
-3. **Ignoring compute constraints**: Model runs in sim but too slow on Jetson
-4. **Poor lighting simulation**: Realistic shadows/reflections are critical for vision
-5. **Skipping hardware-in-the-loop**: Always test on target hardware before full deployment
->>>>>>> 002-rag-backend-study-assistant
 
 ---
 
 ## What's Next?
 
-<<<<<<< HEAD
 In the next chapter, we'll:
 
 - Build a custom object detection model in Isaac Sim
@@ -1206,29 +1152,12 @@ In the next chapter, we'll:
 - Integrate it with MoveIt 2 for pick-and-place tasks
 
 You've now learned the foundation of NVIDIA Isaac. Next, we'll build a real-world AI robotics system!
-=======
-In the next chapters, we'll:
-
-- Build a custom Isaac Sim environment for humanoid training
-- Train a vision model using synthetic data
-- Deploy VSLAM and object detection on Jetson
-- Implement whole-body control for a humanoid robot
-
-You now understand Isaac's role in Physical AI. Next, we combine it with language models for intelligent robots!
->>>>>>> 002-rag-backend-study-assistant
 
 ---
 
 **Resources for Deeper Learning:**
 
-<<<<<<< HEAD
 - [NVIDIA Isaac Sim Documentation](https://docs.omniverse.nvidia.com/app_isaacsim/app_isaacsim/overview.html)
 - [Isaac ROS GitHub](https://github.com/NVIDIA-ISAAC-ROS)
 - [Jetson Developer Zone](https://developer.nvidia.com/embedded/jetson)
 - [TAO Toolkit (Training)](https://developer.nvidia.com/tao-toolkit)
-=======
-- [Isaac Sim Documentation](https://docs.omniverse.nvidia.com/isaacsim/latest/)
-- [Isaac ROS Documentation](https://nvidia-isaac-ros.github.io/index.html)
-- [Jetson Developer Guide](https://developer.nvidia.com/embedded/develop/getting-started)
-- [USD Introduction](https://graphics.pixar.com/usd/docs/index.html)
->>>>>>> 002-rag-backend-study-assistant
