@@ -1,0 +1,9 @@
+#!/bin/sh
+'''exec' "/mnt/e/Certified Cloud Native Applied Generative and Agentic AI Engineer/Q4 part 2/Hackathon/physical-ai-humanoid-textbook/venv/bin/python3" "$0" "$@"
+' '''
+import sys
+from uvicorn.main import main
+if __name__ == '__main__':
+    if sys.argv[0].endswith('.exe'):
+        sys.argv[0] = sys.argv[0][:-4]
+    sys.exit(main())
