@@ -22,6 +22,7 @@ Thumbs.db
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+<<<<<<< HEAD
 backend/.env.save
 
 # Python
@@ -42,3 +43,17 @@ build/
 .pytest_cache/
 .coverage
 htmlcov/
+=======
+
+# Python Backend
+backend/.env
+backend/.env.*
+!backend/.env.example
+backend/.venv/
+backend/__pycache__/
+backend/**/__pycache__/
+backend/.pytest_cache/
+backend/dist/
+backend/*.egg-info/
+backend/uv.lock
+>>>>>>> 002-rag-backend-study-assistant
