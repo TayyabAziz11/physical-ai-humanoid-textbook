@@ -1,32 +1,43 @@
-# backend/main.py
+# backend/app/main.py
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 from pydantic import BaseModel
-from app.db.qdrant import get_qdrant_client
-from app.services.rag import RagRetriever, RagChat
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.config import get_settings
+from app.services.rag import answer_chat_request
+from app.models.schemas import ChatRequest, ChatResponse
+from app.db.session import get_db  # adjust if your DB dependency is named differently
+
+settings = get_settings()
 
 # FastAPI instance
-app = FastAPI(title="Physical AI Humanoid Textbook Chatbot")
+app = FastAPI(
+    title=settings.APP_NAME,
+    version=settings.APP_VERSION,
+)
 
-# Initialize Qdrant client
-qdrant_client = get_qdrant_client()
-retriever = RagRetriever(client=qdrant_client, collection_name="textbook_chunks")
-rag_chat = RagChat(retriever=retriever)
-
-# Request model
-class QueryRequest(BaseModel):
-    query: str
-
+# -----------------------
 # Health check
+# -----------------------
 @app.get("/health")
 async def health_check():
     return {"status": "ok"}
 
+# -----------------------
 # Chat endpoint
-@app.post("/chat")
-async def chat(request: QueryRequest):
+# -----------------------
+@app.post("/chat", response_model=ChatResponse)
+async def chat(
+    request: ChatRequest,
+    db: AsyncSession = Depends(get_db),
+):
     try:
-        answer = rag_chat.answer(request.query)
-        return {"answer": answer}
+        return await answer_chat_request(
+            request=request,
+            db=db,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Internal server error")
