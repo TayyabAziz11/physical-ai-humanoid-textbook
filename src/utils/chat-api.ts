@@ -58,7 +58,7 @@ export async function queryGlobal(
   question: string,
   conversationHistory: ConversationMessage[] | null = null
 ): Promise<QueryResponse> {
-  const endpoint = getApiEndpoint('/query/global');
+  const endpoint = getApiEndpoint('/api/v1/query/global');
 
   console.log('📤 Sending global query to:', endpoint);
 
@@ -105,7 +105,7 @@ export async function querySelection(
   question: string,
   selectedText: string
 ): Promise<QueryResponse> {
-  const endpoint = getApiEndpoint('/query/selection');
+  const endpoint = getApiEndpoint('/api/v1/query/selection');
 
   console.log('📤 Sending selection query to:', endpoint);
 
