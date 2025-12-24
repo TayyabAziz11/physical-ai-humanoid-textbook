@@ -1,7 +1,9 @@
 """Application Configuration using Pydantic Settings."""
 
 import json
+from functools import lru_cache
 from typing import Any
+
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -48,15 +50,16 @@ class Settings(BaseSettings):
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
     def parse_cors_origins(cls, v: Any) -> list[str]:
-        """Parse CORS_ORIGINS from JSON string or list."""
+        """Parse CORS_ORIGINS from JSON string or comma-separated string."""
         if isinstance(v, str):
             try:
                 return json.loads(v)
             except json.JSONDecodeError:
-                # If not valid JSON, split by comma
                 return [origin.strip() for origin in v.split(",") if origin.strip()]
         return v
 
 
-# Singleton instance
-settings = Settings()
+@lru_cache
+def get_settings() -> Settings:
+    """Return cached application settings."""
+    return Settings()
