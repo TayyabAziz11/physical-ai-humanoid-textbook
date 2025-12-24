@@ -2,7 +2,8 @@
 
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, VectorParams
-from app.core.config import settings
+
+from app.core.config import get_settings
 from app.core.logging import get_logger
 
 logger = get_logger(__name__)
@@ -21,12 +22,16 @@ def get_qdrant_client() -> QdrantClient:
     global _qdrant_client
 
     if _qdrant_client is None:
+        settings = get_settings()
+
         logger.info(f"Initializing Qdrant client: {settings.QDRANT_URL}")
+
         _qdrant_client = QdrantClient(
             url=settings.QDRANT_URL,
             api_key=settings.QDRANT_API_KEY,
             timeout=30,
         )
+
         logger.info("Qdrant client initialized successfully")
 
     return _qdrant_client
@@ -40,11 +45,11 @@ async def init_collection() -> None:
     - Vector size: 1536 (text-embedding-3-small dimension)
     - Distance metric: Cosine similarity
     """
+    settings = get_settings()
     client = get_qdrant_client()
     collection_name = settings.QDRANT_COLLECTION
 
     try:
-        # Check if collection exists
         collections = client.get_collections()
         collection_names = [col.name for col in collections.collections]
 
@@ -52,17 +57,18 @@ async def init_collection() -> None:
             logger.info(f"Collection '{collection_name}' already exists")
             return
 
-        # Create collection
         logger.info(f"Creating collection '{collection_name}'")
+
         client.create_collection(
             collection_name=collection_name,
             vectors_config=VectorParams(
-                size=1536,  # text-embedding-3-small dimension
+                size=1536,
                 distance=Distance.COSINE,
             ),
         )
+
         logger.info(f"Collection '{collection_name}' created successfully")
 
-    except Exception as e:
-        logger.error(f"Error initializing collection: {e}")
-        raise
+    except Exception as exc:
+        logger.exception("Error initializing Qdrant collection")
+        raise exc

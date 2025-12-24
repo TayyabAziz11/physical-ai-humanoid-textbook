@@ -33,6 +33,45 @@ const config: Config = {
     locales: ['en'],
   },
 
+  // Custom head tags for cache-busting and version metadata
+  headTags: [
+    {
+      tagName: 'meta',
+      attributes: {
+        name: 'app-version',
+        content: '1.0.1',
+      },
+    },
+    {
+      tagName: 'meta',
+      attributes: {
+        name: 'build-date',
+        content: new Date().toISOString(),
+      },
+    },
+    {
+      tagName: 'meta',
+      attributes: {
+        'http-equiv': 'Cache-Control',
+        content: 'no-cache, no-store, must-revalidate',
+      },
+    },
+    {
+      tagName: 'meta',
+      attributes: {
+        'http-equiv': 'Pragma',
+        content: 'no-cache',
+      },
+    },
+    {
+      tagName: 'meta',
+      attributes: {
+        'http-equiv': 'Expires',
+        content: '0',
+      },
+    },
+  ],
+
   presets: [
     [
       'classic',
@@ -58,8 +97,16 @@ const config: Config = {
     },
     // Custom configuration for ChatWidget
     customFields: {
-      chatApiUrl: process.env.REACT_APP_API_URL || 'http://localhost:8000/api/v1',
+      // Backend API URL is now managed in src/config/api-config.ts
+      // Railway production: https://physical-ai-humanoid-textbook-production-ee4c.up.railway.app
+      apiVersion: '1.0.1',
+      buildTimestamp: new Date().toISOString(),
     },
+    metadata: [
+      // Additional cache-busting meta tags
+      {name: 'version', content: '1.0.1'},
+      {name: 'last-updated', content: new Date().toISOString()},
+    ],
     navbar: {
       title: 'Physical AI & Humanoid Robotics',
       logo: {
@@ -115,7 +162,7 @@ const config: Config = {
           ],
         },
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} Physical AI & Humanoid Robotics Textbook. Authored by Tayyab Aziz.`,
+      copyright: `Copyright © ${new Date().getFullYear()} Physical AI & Humanoid Robotics Textbook. Authored by Tayyab Aziz. v1.0.1`,
     },
     prism: {
       theme: prismThemes.github,
