@@ -1,7 +1,10 @@
 /**
  * Chat API client for interacting with the RAG backend.
- * Properly integrated with Docusaurus configuration.
+ * Updated to use centralized API configuration with proper cache-busting.
+ * Version: 1.0.1 (Updated 2025-12-23)
  */
+
+import { getApiEndpoint } from '../config/api-config';
 
 export interface QueryResponse {
   answer: string;
@@ -21,22 +24,27 @@ export interface ConversationMessage {
 }
 
 /**
- * Get the API base URL.
- * For development: uses localhost:8000
- * For production: set window.CHAT_API_URL in your deployment
+ * Fetch with cache-busting headers.
+ * Ensures we always get fresh data from the backend.
  */
-function getApiBaseUrl(): string {
-  // Check if we're in a browser context
-  if (typeof window !== 'undefined') {
-    // Allow runtime configuration via window object (set in production)
-    const configuredUrl = (window as any).CHAT_API_URL;
-    if (configuredUrl) {
-      return configuredUrl;
-    }
-  }
+async function fetchWithCacheBusting(url: string, options: RequestInit = {}): Promise<Response> {
+  const timestamp = Date.now();
+  const cacheBustedUrl = url.includes('?')
+    ? `${url}&_t=${timestamp}`
+    : `${url}?_t=${timestamp}`;
 
-  // Default to localhost for development
-  return 'http://localhost:8000/api/v1';
+  const headers = {
+    'Content-Type': 'application/json',
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0',
+    ...options.headers,
+  };
+
+  return fetch(cacheBustedUrl, {
+    ...options,
+    headers,
+  });
 }
 
 /**
@@ -50,7 +58,9 @@ export async function queryGlobal(
   question: string,
   conversationHistory: ConversationMessage[] | null = null
 ): Promise<QueryResponse> {
-  const apiBaseUrl = getApiBaseUrl();
+  const endpoint = getApiEndpoint('/query/global');
+
+  console.log('📤 Sending global query to:', endpoint);
 
   const requestBody: Record<string, unknown> = {
     question: question.trim(),
@@ -60,11 +70,8 @@ export async function queryGlobal(
     requestBody.conversation_history = conversationHistory;
   }
 
-  const response = await fetch(`${apiBaseUrl}/query/global`, {
+  const response = await fetchWithCacheBusting(endpoint, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
     body: JSON.stringify(requestBody),
   });
 
@@ -78,10 +85,12 @@ export async function queryGlobal(
       // If parsing JSON fails, use the default error message
     }
 
+    console.error('❌ Global query failed:', errorMessage);
     throw new Error(errorMessage);
   }
 
   const data = await response.json();
+  console.log('✅ Global query successful');
   return data as QueryResponse;
 }
 
@@ -96,18 +105,17 @@ export async function querySelection(
   question: string,
   selectedText: string
 ): Promise<QueryResponse> {
-  const apiBaseUrl = getApiBaseUrl();
+  const endpoint = getApiEndpoint('/query/selection');
+
+  console.log('📤 Sending selection query to:', endpoint);
 
   const requestBody = {
     question: question.trim(),
     selected_text: selectedText.trim(),
   };
 
-  const response = await fetch(`${apiBaseUrl}/query/selection`, {
+  const response = await fetchWithCacheBusting(endpoint, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
     body: JSON.stringify(requestBody),
   });
 
@@ -121,9 +129,11 @@ export async function querySelection(
       // If parsing JSON fails, use the default error message
     }
 
+    console.error('❌ Selection query failed:', errorMessage);
     throw new Error(errorMessage);
   }
 
   const data = await response.json();
+  console.log('✅ Selection query successful');
   return data as QueryResponse;
 }
