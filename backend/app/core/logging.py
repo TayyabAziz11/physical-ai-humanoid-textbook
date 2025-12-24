@@ -2,7 +2,7 @@
 
 import logging
 import sys
-from app.core.config import settings
+from app.core.config import get_settings
 
 
 def get_logger(name: str) -> logging.Logger:
@@ -20,7 +20,7 @@ def get_logger(name: str) -> logging.Logger:
     # Only configure if handlers haven't been added yet
     if not logger.handlers:
         # Set log level from settings
-        log_level = getattr(logging, settings.LOG_LEVEL.upper(), logging.INFO)
+        log_level = getattr(logging, get_settings.LOG_LEVEL.upper(), logging.INFO)
         logger.setLevel(log_level)
 
         # Create console handler
