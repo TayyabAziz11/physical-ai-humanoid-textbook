@@ -1,4 +1,4 @@
-[project]
+# or open in VS Code[project]
 name = "rag-backend"
 version = "0.1.0"
 description = "RAG Backend & Study Assistant API for Physical AI Textbook"
@@ -6,6 +6,7 @@ requires-python = ">=3.11"
 dependencies = [
     "fastapi>=0.109.0",
     "uvicorn[standard]>=0.27.0",
+<<<<<<< HEAD
     "qdrant-client>=1.7.0",
     "openai>=1.10.0",
     "pydantic>=2.6.0",
@@ -17,6 +18,19 @@ dependencies = [
     "tiktoken>=0.5.2",
     "httpx>=0.26.0",
     "sqlalchemy>=2.0.25",
+=======
+    "pydantic>=2.6.0",
+    "pydantic-settings>=2.1.0",
+    "sqlalchemy>=2.0.25",
+    "asyncpg>=0.29.0",
+    "qdrant-client>=1.7.0",
+    "openai>=1.10.0",
+    "python-dotenv>=1.0.0",
+    "python-frontmatter>=1.0.0",
+    "tiktoken>=0.5.2",
+    "httpx>=0.26.0",
+    "psycopg2-binary>=2.9.11",
+>>>>>>> 002-rag-backend-study-assistant
 ]
 
 [project.optional-dependencies]
@@ -30,6 +44,7 @@ dev = [
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+<<<<<<< HEAD
 [tool.uv]
 dev-dependencies = []
 
@@ -40,5 +55,7 @@ python_files = "test_*.py"
 python_classes = "Test*"
 python_functions = "test_*"
 
+=======
+>>>>>>> 002-rag-backend-study-assistant
 [tool.hatch.build.targets.wheel]
 packages = ["app"]
