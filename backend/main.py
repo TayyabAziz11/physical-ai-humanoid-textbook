@@ -16,6 +16,7 @@ from app.services.rag import answer_chat_request
 from app.models.schemas import ChatRequest, ChatResponse
 from app.db.session import get_db
 from app.db.qdrant import init_collection
+from app.api.v1.router import api_router as v1_router
 
 # Initialize settings and logger
 settings = get_settings()
@@ -66,14 +67,28 @@ app = FastAPI(
     openapi_url="/openapi.json",
 )
 
-# Configure CORS
+# Configure CORS - Allow GitHub Pages frontend and localhost
+# Priority: environment variable CORS_ORIGINS, then default to GitHub Pages + localhost
+allowed_origins = settings.CORS_ORIGINS if settings.CORS_ORIGINS else [
+    "https://tayyabaziz11.github.io",  # GitHub Pages (production)
+    "http://localhost:3000",            # Local Docusaurus dev server
+    "http://localhost:8000",            # Alternative local dev
+    "http://127.0.0.1:3000",            # IPv4 localhost
+]
+
+logger.info(f"🔒 CORS allowed origins: {allowed_origins}")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS if settings.CORS_ORIGINS else ["*"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include API v1 router - provides /query/global and /query/selection endpoints
+app.include_router(v1_router, prefix="/api/v1", tags=["API v1"])
+logger.info("✅ API v1 router included: /api/v1/query/global, /api/v1/query/selection")
 
 
 # ============================================
@@ -99,6 +114,8 @@ async def root():
         "endpoints": {
             "health": "/health",
             "chat": "/chat (POST)",
+            "query_global": "/api/v1/query/global (POST)",
+            "query_selection": "/api/v1/query/selection (POST)",
         }
     }
 

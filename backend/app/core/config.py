@@ -210,6 +210,11 @@ def get_settings() -> Settings:
     return Settings()
 
 
+# Export settings singleton for direct imports
+# Usage: from app.core.config import settings
+settings = get_settings()
+
+
 # ============================================
 # Railway Deployment Notes
 # ============================================
