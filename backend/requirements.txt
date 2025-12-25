@@ -13,3 +13,4 @@ openai
 
 python-dotenv
 tiktoken==0.4.0
+python-frontmatter==1.0.1
