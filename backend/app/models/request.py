@@ -1,10 +1,11 @@
 """Request models for API endpoints."""
 
-from typing import Any
+from typing import Any, Optional
 from pydantic import BaseModel, Field, field_validator
 import tiktoken
 
 from app.core.config import settings
+from app.models.translation import SupportedLanguage
 
 
 # Initialize tiktoken encoder for token counting
@@ -71,4 +72,58 @@ class ReindexRequest(BaseModel):
 
     docs_directory: str = Field(
         default="./docs", description="Path to documentation directory to index"
+    )
+
+
+class TranslateTextRequest(BaseModel):
+    """Request model for text translation endpoint.
+
+    This model validates requests to translate arbitrary text from one language
+    to another using the translation service.
+
+    Example:
+        >>> request = TranslateTextRequest(
+        ...     text="Hello world",
+        ...     target_language="spanish",
+        ...     preserve_technical_terms=True
+        ... )
+        >>> request.source_language
+        'english'
+        >>> request.preserve_technical_terms
+        True
+
+    Attributes:
+        text: Text to translate (1-10,000 characters)
+        target_language: Target language code (e.g., 'spanish', 'urdu')
+        source_language: Source language code (defaults to 'english')
+        preserve_technical_terms: Keep technical terms in original language (default: True)
+        context: Optional context hint for better translation (max 200 chars)
+    """
+
+    text: str = Field(
+        ...,
+        min_length=1,
+        max_length=10000,
+        description="Text to translate (1-10,000 characters)"
+    )
+
+    target_language: SupportedLanguage = Field(
+        ...,
+        description="Target language for translation"
+    )
+
+    source_language: SupportedLanguage = Field(
+        default="english",
+        description="Source language of the text (defaults to English)"
+    )
+
+    preserve_technical_terms: bool = Field(
+        default=True,
+        description="Whether to preserve technical terms in original language"
+    )
+
+    context: Optional[str] = Field(
+        default=None,
+        max_length=200,
+        description="Optional context hint for better translation (max 200 characters)"
     )

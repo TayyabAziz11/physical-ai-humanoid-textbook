@@ -1,0 +1,101 @@
+/**
+ * Styles for PageTranslator component
+ */
+
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  min-height: 300px;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid var(--ifm-color-emphasis-200);
+  border-top-color: var(--ifm-color-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loadingText {
+  margin-top: 20px;
+  color: var(--ifm-color-emphasis-700);
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.errorBanner {
+  padding: 16px 20px;
+  margin-bottom: 24px;
+  background-color: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeaa7;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+[data-theme='dark'] .errorBanner {
+  background-color: rgba(255, 193, 7, 0.15);
+  color: #ffd54f;
+  border-color: rgba(255, 193, 7, 0.3);
+}
+
+.originalContent {
+  /* Just pass through the original content */
+}
+
+.translatedContainer {
+  position: relative;
+}
+
+.translationBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  margin-bottom: 24px;
+  background: linear-gradient(135deg, var(--ifm-color-primary-lightest) 0%, var(--ifm-color-primary-lighter) 100%);
+  color: var(--ifm-color-primary-darkest);
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: capitalize;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme='dark'] .translationBadge {
+  background: linear-gradient(135deg, var(--ifm-color-primary-darkest) 0%, var(--ifm-color-primary-darker) 100%);
+  color: var(--ifm-color-primary-lightest);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.translatedContent {
+  line-height: 1.8;
+}
+
+.translatedContent p {
+  margin-bottom: 1.2em;
+}
+
+.translatedContent p:last-child {
+  margin-bottom: 0;
+}
+
+/* RTL support */
+[dir='rtl'] .translatedContent {
+  text-align: right;
+}
+
+[dir='rtl'] .errorBanner {
+  text-align: right;
+}

@@ -1,0 +1,22 @@
+{
+  "title": {
+    "message": "Physical AI & Humanoid Robotics",
+    "description": "The title in the navbar"
+  },
+  "logo.alt": {
+    "message": "Physical AI Logo",
+    "description": "The alt text of navbar logo"
+  },
+  "item.label.Course": {
+    "message": "Course",
+    "description": "Navbar item with label Course"
+  },
+  "item.label.Study Assistant": {
+    "message": "Study Assistant",
+    "description": "Navbar item with label Study Assistant"
+  },
+  "item.label.GitHub": {
+    "message": "GitHub",
+    "description": "Navbar item with label GitHub"
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "link.title.Learn": {
+    "message": "Learn",
+    "description": "The title of the footer links column with title=Learn in the footer"
+  },
+  "link.title.Connect": {
+    "message": "Connect",
+    "description": "The title of the footer links column with title=Connect in the footer"
+  },
+  "link.item.label.Course Introduction": {
+    "message": "Course Introduction",
+    "description": "The label of footer link with label=Course Introduction linking to /docs/intro"
+  },
+  "link.item.label.Study Assistant": {
+    "message": "Study Assistant",
+    "description": "The label of footer link with label=Study Assistant linking to /chat"
+  },
+  "link.item.label.GitHub": {
+    "message": "GitHub",
+    "description": "The label of footer link with label=GitHub linking to https://github.com/TayyabAziz11"
+  },
+  "link.item.label.LinkedIn": {
+    "message": "LinkedIn",
+    "description": "The label of footer link with label=LinkedIn linking to https://www.linkedin.com/in/tayyab-aziz-763a502b4/"
+  },
+  "copyright": {
+    "message": "Copyright © 2025 Physical AI & Humanoid Robotics Textbook. Authored by Tayyab Aziz. v1.0.1",
+    "description": "The footer copyright"
+  }
+}

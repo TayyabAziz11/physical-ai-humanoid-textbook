@@ -1,0 +1,548 @@
+---
+id: chapter-1-basics
+title: "Chapter 1 - ROS 2 Basics"
+sidebar_label: "Chapter 1: Basics"
+---
+
+import ChapterActionsBar from '@site/src/components/learning/ChapterActionsBar';
+
+# Chapter 1: ROS 2 بنیادی باتیں
+
+<ChapterActionsBar />
+
+## Physical AI اور Embodied Intelligence کا تعارف
+
+ROS 2 میں جانے سے پہلے، آئیے سمجھتے ہیں کہ Physical AI کا کیا مطلب ہے اور یہ مصنوعی ذہانت میں اگلی سرحد کیوں ہے۔
+
+### Physical AI کیا ہے؟
+
+**Physical AI** ایسے AI سسٹمز کو کہتے ہیں جو حقیقی جسمانی دنیا میں تعامل اور کام کرتے ہیں۔ روایتی AI جو صرف ڈیجیٹل جگہوں میں موجود ہے (جیسے chatbots یا recommendation سسٹمز) کے برعکس، Physical AI کو چاہیے:
+
+- جسمانی قوانین کو سمجھنا (کشش ثقل، رگڑ، جمود)
+- cameras، LiDAR، اور ٹچ سینسرز سے حسی ڈیٹا پروسیس کرنا
+- motors اور actuators کے ذریعے حقیقی دنیا کو متاثر کرنے والے اعمال انجام دینا
+- غیر متوقع، متحرک ماحول کے مطابق ڈھلنا
+
+اس طرح سوچیں: ChatGPT بات چیت میں شاندار ہے، لیکن یہ کافی کا کپ نہیں اٹھا سکتا۔ Physical AI کے ساتھ humanoid robot دونوں کام کر سکتا ہے—آپ کی درخواست سمجھنا *اور* جسمانی طور پر اسے پورا کرنا۔
+
+### Embodied Intelligence: جسم میں رہنے والی AI
+
+**Embodied intelligence** یہ خیال ہے کہ ذہانت جسم اور اس کے ماحول کے درمیان تعامل سے پیدا ہوتی ہے۔ ایک دماغ بغیر sensors اور actuators کے تجربے کے ذریعے دنیا کے بارے میں نہیں سیکھ سکتا۔
+
+Humanoid robots ہماری دنیا میں اس لیے بہتر ہیں کیونکہ:
+
+1. **شکل کا میچ**: وہ انسانوں کے لیے ڈیزائن کی گئی جگہوں میں چلتے ہیں (سیڑھیاں، دروازے، کرسیاں)
+2. **ٹول کی مطابقت**: وہ انسانی آلات کو دوبارہ ڈیزائن کیے بغیر استعمال کرتے ہیں
+3. **سماجی سمجھ**: لوگ قدرتی طور پر ان کی باڈی لینگویج کو سمجھتے ہیں
+4. **بھرپور تربیتی ڈیٹا**: انسانی حرکت کا ڈیٹا وافر ہے (videos، motion capture)
+
+یہی وجہ ہے کہ Tesla (Optimus)، Figure AI، اور Boston Dynamics جیسی کمپنیاں humanoid robotics میں اربوں ڈالر کی سرمایہ کاری کر رہی ہیں۔
+
+---
+
+## ROS 2 کیوں؟ Robotic اعصابی نظام
+
+تصور کریں کہ آپ صفر سے robot بنا رہے ہیں۔ آپ کو ضرورت ہوگی:
+
+- ایک ساتھ 20+ sensors سے ڈیٹا پڑھنا
+- درجنوں motors کو کمانڈز بھیجنا
+- vision، speech، اور planning کے لیے AI ماڈلز چلانا
+- ان تمام کاموں کو real-time میں مربوط کرنا
+- جب کچھ غلط ہو تو debug کرنا
+
+یہیں **ROS 2 (Robot Operating System 2)** آتا ہے۔ یہ Windows یا Linux جیسا operating system نہیں ہے—یہ ایک **middleware framework** ہے جو فراہم کرتا ہے:
+
+- آپ کے robot کے مختلف حصوں کے درمیان **Communication infrastructure**
+- visualization، debugging، اور ڈیٹا ریکارڈ کرنے کے لیے **معیاری ٹولز**
+- navigation، perception، اور control کے لیے پہلے سے بنی ہوئی لائبریریوں کا **ایک بڑا ecosystem**
+
+ROS 2 کو اس اعصابی نظام کے طور پر سوچیں جو robot کے "دماغ" (AI)، "حواس" (sensors)، اور "پٹھوں" (actuators) کو جوڑتا ہے۔
+
+### ROS 1 بمقابلہ ROS 2: upgrade کیوں؟
+
+ROS 1 انقلابی تھا لیکن اس کی حدود تھیں:
+
+- کوئی built-in real-time سپورٹ نہیں (safety کے لیے اہم)
+- Windows کے ساتھ کمزور مطابقت
+- محدود سیکیورٹی خصوصیات
+- Single-point-of-failure architecture
+
+**ROS 2** (2017 میں released، 2020 سے stable) ان تمام مسائل کو حل کرتا ہے:
+
+- **DDS (Data Distribution Service)**: صنعتی معیار کی real-time communication
+- **Multi-platform سپورٹ**: Linux، Windows، macOS
+- **Security**: Encryption اور authentication built-in
+- **Scalability**: چھوٹے drones سے warehouse robot fleets تک کام کرتا ہے
+
+Physical AI کے لیے، ROS 2 معیاری انتخاب ہے۔
+
+---
+
+## بنیادی ROS 2 تصورات
+
+ROS 2 robot software کو **آزاد programs کے graph** میں منظم کرتا ہے جو ایک دوسرے کے ساتھ بات چیت کرتے ہیں۔ آئیے کلیدی تصورات کو سمجھتے ہیں۔
+
+### 1. Nodes: عمارت کے بلاکس
+
+**Node** ایک واحد program ہے جو ایک مخصوص کام انجام دیتا ہے۔ مثالیں:
+
+- ایک node جو camera کی تصاویر پڑھتا ہے
+- ایک node جو تصاویر میں چہروں کا پتہ لگاتا ہے
+- ایک node جو robot کے بازو کو کنٹرول کرتا ہے
+
+**ایک بڑے program کی بجائے الگ nodes کیوں؟**
+
+- **Modularity**: چہرہ detector کو بغیر بازو controller کو چھوئے بدل سکتے ہیں
+- **Debugging**: ہر حصے کو آزادانہ طور پر test کر سکتے ہیں
+- **Parallelism**: مختلف nodes مختلف CPU cores پر چلتے ہیں
+- **Reusability**: مختلف robots میں nodes شیئر کر سکتے ہیں
+
+**حقیقی دنیا کی مثال**: ریستوران کے باورچی خانے کے بارے میں سوچیں۔ chef (ایک node) برتن بھی نہیں دھوتا اور آرڈر بھی نہیں لیتا۔ خصوصی عملہ (nodes) ہر کام سنبھالتا ہے اور آرڈر ٹکٹوں (messages) کے ذریعے بات چیت کرتا ہے۔
+
+### 2. Topics: ڈیٹا کی شاہراہیں
+
+**Topics** نامزد channels ہیں جن پر nodes messages بھیجتے اور وصول کرتے ہیں۔
+
+- ایک node topic پر messages **publish** کرتا ہے
+- دوسرے nodes messages وصول کرنے کے لیے اس topic کو **subscribe** کرتے ہیں
+
+```
+┌──────────────┐         /camera/image         ┌──────────────┐
+│ Camera Node  │────────────────────────────▶│ Vision Node  │
+│ (Publisher)  │                               │ (Subscriber) │
+└──────────────┘                               └──────────────┘
+```
+
+**کلیدی خصوصیات:**
+
+- **Many-to-many**: ایک topic پر متعدد publishers اور subscribers
+- **Asynchronous**: Publisher subscribers کا انتظار نہیں کرتا
+- **Typed**: ہر topic کی ایک مخصوص message type ہوتی ہے (جیسے `Image`، `LaserScan`)
+
+**حقیقی دنیا کی مثال**: Topics ریڈیو سٹیشنوں کی طرح ہیں۔ ایک نیوز سٹیشن (publisher) مسلسل broadcast کرتا ہے۔ کوئی بھی ریڈیو (subscriber) اس فریکوئنسی پر tuned خبریں وصول کرتا ہے۔ سٹیشن کو نہیں پتا کہ کتنے سننے والے ہیں۔
+
+### 3. Services: Request-Response Communication
+
+کبھی کبھی آپ کو **synchronous request-response** pattern کی ضرورت ہوتی ہے۔ یہیں **services** آتی ہیں۔
+
+```
+┌──────────────┐     Request: "Add 2+3"      ┌──────────────┐
+│ Client Node  │──────────────────────────▶│ Server Node  │
+│              │◀──────────────────────────│ (Calculator) │
+└──────────────┘     Response: "5"          └──────────────┘
+```
+
+**Services کب استعمال کریں:**
+
+- تشکیلاتی تبدیلیاں (مثلاً، "Set camera exposure to 100")
+- ایک بار کے queries (مثلاً، "What's the robot's battery level?")
+- وہ actions جو آگے بڑھنے سے پہلے مکمل ہونے چاہیئیں
+
+**Topics سے فرق:**
+
+| خصوصیت | Topics | Services |
+|---------|--------|----------|
+| Pattern | Publish-Subscribe | Request-Response |
+| Timing | Asynchronous (مسلسل) | Synchronous (ایک بار) |
+| Use Case | Sensor ڈیٹا streams | Configuration، queries |
+
+### 4. Actions: طویل المیعاد کام
+
+**Actions** services کی طرح ہیں لیکن ان کاموں کے لیے جو وقت لیتے ہیں اور feedback فراہم کرتے ہیں۔
+
+```
+Goal: "Navigate to kitchen"
+    ↓
+Feedback: "10% complete... 50% complete..."
+    ↓
+Result: "Arrived at kitchen"
+```
+
+**مثالیں:**
+
+- ایک مقام پر navigate کرنا (progress updates کے ساتھ)
+- کوئی چیز اٹھانا (approach/grasp/lift مراحل کے ساتھ)
+- بیٹری charge کرنا (charging status updates کے ساتھ)
+
+Actions کو درمیان میں **cancel** کیا جا سکتا ہے، services کے برعکس۔
+
+---
+
+## Python میں ROS 2: آپ کا پہلا Node
+
+آئیے `rclpy` (ROS Client Library for Python) استعمال کرتے ہوئے ایک سادہ ROS 2 node لکھتے ہیں۔
+
+### مثال 1: Hello World Publisher
+
+یہ node ہر سیکنڈ "Hello, World!" message publish کرتا ہے۔
+
+```python
+import rclpy
+from rclpy.node import Node
+from std_msgs.msg import String
+
+class HelloPublisher(Node):
+    def __init__(self):
+        super().__init__('hello_publisher')  # Node name
+
+        # Create a publisher for the 'greetings' topic
+        self.publisher = self.create_publisher(String, 'greetings', 10)
+
+        # Create a timer that calls publish_message() every 1.0 seconds
+        self.timer = self.create_timer(1.0, self.publish_message)
+
+        self.count = 0
+
+    def publish_message(self):
+        msg = String()
+        msg.data = f'Hello, World! Count: {self.count}'
+        self.publisher.publish(msg)
+        self.get_logger().info(f'Published: "{msg.data}"')
+        self.count += 1
+
+def main(args=None):
+    rclpy.init(args=args)              # Initialize ROS 2
+    node = HelloPublisher()            # Create the node
+    rclpy.spin(node)                   # Keep the node running
+    node.destroy_node()
+    rclpy.shutdown()
+
+if __name__ == '__main__':
+    main()
+```
+
+**یہاں کیا ہو رہا ہے؟**
+
+1. **Import `rclpy`**: Python ROS 2 لائبریری
+2. **`Node` سے Inherit کریں**: ہر ROS 2 node ایک class ہے جو `Node` سے inherit کرتی ہے
+3. **ایک publisher بنائیں**: `create_publisher(MessageType, 'topic_name', queue_size)`
+4. **Timer callback**: `publish_message()` کو بار بار call کرتا ہے
+5. **Spin**: node کو زندہ رکھتا ہے اور callbacks process کرتا ہے
+
+### مثال 2: Subscriber Node
+
+یہ node `greetings` topic کو سنتا ہے اور موصول messages print کرتا ہے۔
+
+```python
+import rclpy
+from rclpy.node import Node
+from std_msgs.msg import String
+
+class HelloSubscriber(Node):
+    def __init__(self):
+        super().__init__('hello_subscriber')
+
+        # Subscribe to the 'greetings' topic
+        self.subscription = self.create_subscription(
+            String,
+            'greetings',
+            self.listener_callback,
+            10)
+
+    def listener_callback(self, msg):
+        self.get_logger().info(f'Received: "{msg.data}"')
+
+def main(args=None):
+    rclpy.init(args=args)
+    node = HelloSubscriber()
+    rclpy.spin(node)
+    node.destroy_node()
+    rclpy.shutdown()
+
+if __name__ == '__main__':
+    main()
+```
+
+**کیسے چلائیں:**
+
+```bash
+# Terminal 1: Run publisher
+python3 hello_publisher.py
+
+# Terminal 2: Run subscriber
+python3 hello_subscriber.py
+```
+
+آپ دیکھیں گے کہ subscriber پہلے node کے publish کردہ messages print کر رہا ہے!
+
+---
+
+## URDF کو سمجھنا: اپنے Robot کی تفصیل
+
+**URDF (Unified Robot Description Format)** ایک XML format ہے robot کی جسمانی ساخت بیان کرنے کے لیے۔
+
+### URDF کیوں؟
+
+جب آپ robot کو simulate یا control کرتے ہیں، ROS 2 کو جاننا ضروری ہے:
+
+- Robot کے کون سے حصے (links) ہیں؟
+- وہ کیسے جڑے ہوئے ہیں (joints)؟
+- ان کے سائز، masses، اور collision properties کیا ہیں؟
+- Sensors کہاں attached ہیں؟
+
+URDF یہ "blueprint" فراہم کرتا ہے۔
+
+### سادہ URDF مثال: دو-Link بازو
+
+```xml
+<?xml version="1.0"?>
+<robot name="simple_arm">
+
+  <!-- Base Link (fixed to ground) -->
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <cylinder length="0.1" radius="0.05"/>
+      </geometry>
+      <material name="blue">
+        <color rgba="0 0 1 1"/>
+      </material>
+    </visual>
+  </link>
+
+  <!-- Shoulder Joint (revolute = rotates) -->
+  <joint name="shoulder_joint" type="revolute">
+    <parent link="base_link"/>
+    <child link="upper_arm"/>
+    <origin xyz="0 0 0.1" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>  <!-- Rotates around Y-axis -->
+    <limit lower="-1.57" upper="1.57" effort="10" velocity="1"/>
+  </joint>
+
+  <!-- Upper Arm Link -->
+  <link name="upper_arm">
+    <visual>
+      <geometry>
+        <box size="0.05 0.05 0.3"/>
+      </geometry>
+      <material name="red">
+        <color rgba="1 0 0 1"/>
+      </material>
+    </visual>
+  </link>
+
+</robot>
+```
+
+**کلیدی عناصر:**
+
+- **`<link>`**: ایک سخت body (مثلاً، بازو کا حصہ، پہیہ)
+- **`<joint>`**: دو links کے درمیان رابطہ
+  - `type="revolute"`: گھومتا ہے (کہنی کی طرح)
+  - `type="prismatic"`: سلائڈ کرتا ہے (telescope کی طرح)
+  - `type="fixed"`: کوئی حرکت نہیں
+- **`<origin>`**: 3D space میں position/orientation
+- **`<geometry>`**: visualization/collision کے لیے شکل
+
+Humanoid robot کے لیے، آپ کے پاس ہوگا:
+
+- ~30-40 links (سر، دھڑ، بازو، ٹانگیں، ہاتھ)
+- ~25-30 joints (کندھے، کہنیاں، گھٹنے، ٹخنے)
+- Sensor کی تعریفیں (cameras، IMUs)
+
+---
+
+## Python AI Agents کو ROS 2 سے جوڑنا
+
+ROS 2 کی سب سے طاقتور خصوصیات میں سے ایک AI ماڈلز (Python میں چل رہے) کو robot hardware سے جوڑنا ہے۔
+
+### منظر نامہ: آواز کا حکم سے Robot کی حرکت
+
+فرض کریں آپ چاہتے ہیں کہ robot "Wave hello" پر جواب دے۔
+
+**Pipeline:**
+
+1. **Speech-to-Text**: OpenAI Whisper (Python)
+2. **Intent Recognition**: GPT-4 "wave" action کا تعین کرتا ہے (Python)
+3. **Motion Planning**: ROS 2 MoveIt بازو کی trajectory کی منصوبہ بندی کرتا ہے
+4. **Execution**: Arm controller حرکت کو execute کرتا ہے
+
+یہاں ایک آسان ROS 2 node ہے جو AI کو action سے جوڑتا ہے:
+
+```python
+import rclpy
+from rclpy.node import Node
+from std_msgs.msg import String
+from sensor_msgs.msg import JointState
+import openai  # Example AI library
+
+class VoiceCommandNode(Node):
+    def __init__(self):
+        super().__init__('voice_command_node')
+
+        # Subscribe to speech-to-text results
+        self.create_subscription(String, '/voice/transcript', self.on_voice_command, 10)
+
+        # Publish joint commands to the robot
+        self.joint_pub = self.create_publisher(JointState, '/joint_commands', 10)
+
+        self.get_logger().info('Voice command node ready')
+
+    def on_voice_command(self, msg):
+        transcript = msg.data
+        self.get_logger().info(f'Heard: {transcript}')
+
+        # Use AI to interpret command
+        action = self.interpret_command(transcript)
+
+        if action == 'wave':
+            self.execute_wave()
+
+    def interpret_command(self, text):
+        # Simplified: In reality, use GPT-4 API
+        if 'wave' in text.lower():
+            return 'wave'
+        return 'unknown'
+
+    def execute_wave(self):
+        # Create a joint command message
+        joint_msg = JointState()
+        joint_msg.name = ['shoulder_joint', 'elbow_joint']
+        joint_msg.position = [1.0, 0.5]  # Target angles in radians
+
+        self.joint_pub.publish(joint_msg)
+        self.get_logger().info('Executing wave motion')
+
+def main(args=None):
+    rclpy.init(args=args)
+    node = VoiceCommandNode()
+    rclpy.spin(node)
+    node.destroy_node()
+    rclpy.shutdown()
+
+if __name__ == '__main__':
+    main()
+```
+
+**یہ کیا ظاہر کرتا ہے:**
+
+- AI processing (speech/language) Python میں ہوتی ہے
+- نتائج ROS 2 topics پر publish ہوتے ہیں
+- Motion controllers (رفتار کے لیے C++ میں ہو سکتے ہیں) subscribe کرتے اور عمل کرتے ہیں
+- **خدشات کی علیحدگی**: AI ماہرین ماڈلز پر کام کرتے ہیں، robotics انجینئرز control پر کام کرتے ہیں
+
+---
+
+## ROS 2 Graph کو Visualize کرنا
+
+ROS 2 آپ کے سسٹم کو سمجھنے کے لیے طاقتور ٹولز فراہم کرتا ہے۔
+
+### کمانڈ: `ros2 node list`
+
+تمام فعال nodes دکھاتا ہے:
+
+```
+/hello_publisher
+/hello_subscriber
+/voice_command_node
+```
+
+### کمانڈ: `ros2 topic list`
+
+تمام topics دکھاتا ہے:
+
+```
+/greetings
+/voice/transcript
+/joint_commands
+```
+
+### کمانڈ: `ros2 topic echo /greetings`
+
+Real-time میں topic پر messages print کرتا ہے:
+
+```
+data: 'Hello, World! Count: 0'
+---
+data: 'Hello, World! Count: 1'
+---
+```
+
+### ٹول: `rqt_graph`
+
+ایک graphical ٹول جو nodes اور topics کو visual graph کے طور پر دکھاتا ہے:
+
+```
+┌─────────────┐      /greetings      ┌─────────────┐
+│  publisher  │────────────────────▶│ subscriber  │
+└─────────────┘                      └─────────────┘
+```
+
+یہ پیچیدہ سسٹمز کو debug کرنے کے لیے انمول ہے۔
+
+---
+
+## کلیدی نکات
+
+1. **Physical AI** کا مطلب ہے AI جو embodied intelligence کے ذریعے حقیقی دنیا میں سمجھتی اور کام کرتی ہے
+2. **ROS 2** robot کے اجزاء کو جوڑنے کے لیے صنعتی معیار middleware ہے
+3. **Nodes** آزاد programs ہیں؛ **topics** communication channels ہیں
+4. **Services** request-response سنبھالتی ہیں؛ **actions** feedback کے ساتھ طویل المیعاد کام سنبھالتے ہیں
+5. **URDF** simulation اور control کے لیے robot کی ساخت بیان کرتا ہے
+6. **Python + ROS 2** (`rclpy`) آپ کو AI ماڈلز کو robot hardware سے بغیر کسی رکاوٹ کے جوڑنے دیتا ہے
+
+---
+
+## عملی مشق
+
+ان تصورات کو مضبوط کرنے کے لیے، درج ذیل کی کوشش کریں:
+
+### مشق 1: Hello World Publisher میں ترمیم کریں
+
+Publisher کو counter کی بجائے موجودہ timestamp بھیجنے کے لیے تبدیل کریں۔
+
+**اشارہ:** Python کے `time` ماڈیول کا استعمال کریں۔
+
+### مشق 2: ایک Service بنائیں
+
+ایک ROS 2 service لکھیں جو:
+- Request کے طور پر دو نمبر لیتی ہے
+- Response کے طور پر ان کا مجموعہ واپس کرتی ہے
+
+**اشارہ:** `example_interfaces/srv/AddTwoInts` message type تلاش کریں۔
+
+### مشق 3: URDF کی تلاش
+
+کاغذ پر 2 joints کے ساتھ ایک سادہ robot arm بنائیں۔ پھر، اسے URDF format میں بیان کرنے کی کوشش کریں:
+- 3 links (base، upper arm، lower arm)
+- 2 revolute joints
+
+آپ کو ابھی اسے چلانے کی ضرورت نہیں—صرف syntax کی مشق کریں۔
+
+### مشق 4: تصوراتی پل
+
+تصور کریں آپ کے پاس ایک camera node ہے جو `/camera/image` پر تصاویر publish کر رہا ہے۔ آپ چاہتے ہیں کہ ایک face detection node ان تصاویر کو process کرے اور `/faces/detected` پر چہروں کے مقامات publish کرے۔
+
+**سوال:** Face detection node میں topic subscription اور publication کیا ہوگا؟
+
+---
+
+## عام غلطیاں جو نئے سیکھنے والے کرتے ہیں
+
+1. **ROS 2 کو OS سمجھنا**: ROS 2 Linux/Windows *کے اوپر* چلتا ہے، اس کی جگہ نہیں
+2. **`rclpy.spin()` بھولنا**: Spin کے بغیر، callbacks کبھی execute نہیں ہوتے
+3. **Topic نام میں ٹائپو**: `/camera/image` بمقابلہ `/camera/images`—بالکل ملنا ضروری ہے
+4. **Message types کو check نہ کرنا**: `Int32` کی توقع والے topic پر `String` publish کرنا خاموشی سے ناکام ہوتا ہے
+5. **شروع میں زیادہ engineering**: پیچیدہ actions میں جانے سے پہلے سادہ pub-sub سے شروع کریں
+
+---
+
+## آگے کیا ہے؟
+
+اگلے باب میں، ہم:
+
+- ROS 2 workspace ترتیب دیں گے
+- ایک custom package بنائیں گے
+- ایک ساتھ متعدد nodes شروع کرنے کے لیے launch file بنائیں گے
+- Gazebo میں ایک سادہ robot کو simulate کریں گے
+
+اب آپ نے تصوراتی بنیاد میں مہارت حاصل کر لی ہے۔ اب، ہم عملی ہو جاتے ہیں!
+
+---
+
+**گہری سیکھنے کے لیے وسائل:**
+
+- [Official ROS 2 Documentation](https://docs.ros.org/en/humble/)
+- [ROS 2 Tutorials](https://docs.ros.org/en/humble/Tutorials.html)
+- [URDF XML Specification](http://wiki.ros.org/urdf/XML)
+- [rclpy API Reference](https://docs.ros2.org/latest/api/rclpy/)

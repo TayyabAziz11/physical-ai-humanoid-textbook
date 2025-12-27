@@ -1,0 +1,62 @@
+/**
+ * Styles for SiteLanguageSwitcher component (dropdown only, no toggle)
+ */
+
+.container {
+  display: flex;
+  align-items: center;
+  padding: 4px 8px;
+}
+
+.select {
+  padding: 6px 12px;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 6px;
+  background-color: var(--ifm-background-color);
+  color: var(--ifm-font-color-base);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 160px;
+  outline: none;
+}
+
+.select:hover {
+  border-color: var(--ifm-color-primary);
+  background-color: var(--ifm-color-primary-lightest);
+}
+
+.select:focus {
+  border-color: var(--ifm-color-primary);
+  box-shadow: 0 0 0 2px var(--ifm-color-primary-lighter);
+}
+
+/* Dark mode support */
+[data-theme='dark'] .select {
+  background-color: var(--ifm-background-surface-color);
+  border-color: var(--ifm-color-emphasis-400);
+}
+
+[data-theme='dark'] .select:hover {
+  background-color: var(--ifm-color-primary-darkest);
+  border-color: var(--ifm-color-primary);
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .container {
+    padding: 2px 4px;
+  }
+
+  .select {
+    font-size: 13px;
+    padding: 4px 8px;
+    min-width: 130px;
+  }
+}
+
+/* RTL support */
+[dir='rtl'] .select {
+  text-align: right;
+}
