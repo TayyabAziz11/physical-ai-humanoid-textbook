@@ -70,5 +70,11 @@ async def init_collection() -> None:
         logger.info(f"Collection '{collection_name}' created successfully")
 
     except Exception as exc:
-        logger.exception("Error initializing Qdrant collection")
-        raise exc
+        error_msg = str(exc)
+        # If collection/alias already exists, that's fine - just log and continue
+        if "already exists" in error_msg.lower():
+            logger.info(f"Collection or alias '{collection_name}' already exists, skipping creation")
+            return
+        # For other errors, log but don't crash the app
+        logger.error(f"Error initializing Qdrant collection: {error_msg}")
+        # Don't raise - allow app to continue

@@ -1,0 +1,1163 @@
+---
+id: chapter-1-getting-started
+title: "Chapter 1 - Getting Started with Isaac"
+sidebar_label: "Chapter 1: Getting Started"
+---
+
+import ChapterActionsBar from '@site/src/components/learning/ChapterActionsBar';
+
+# باب 1: NVIDIA Isaac کے ساتھ شروعات
+
+<ChapterActionsBar />
+
+## تعارف: NVIDIA Isaac کیوں؟
+
+تصور کریں کہ آپ نے ایک خوبصورت ROS 2 سسٹم بنایا ہے اور Gazebo میں ڈیجیٹل ٹوئن تخلیق کیا ہے۔ سمولیشن میں سب کچھ بالکل کام کرتا ہے۔ لیکن جب آپ حقیقی روبوٹ پر تعینات کرتے ہیں، تو آپ کو یہ چیلنجز کا سامنا ہوتا ہے:
+
+- **آپ کے ویژن الگورتھم بہت سست ہیں**: 30 FPS کی ضرورت کی بجائے 2 FPS پر کیمرہ فیڈز پروسیس کرنا
+- **حقیقی روشنی میں آبجیکٹ ڈیٹیکشن ناکام ہو جاتا ہے**: مصنوعی ڈیٹا پر تربیت یافتہ آپ کا نیورل نیٹ ورک حقیقی دنیا کی اشیاء کو نہیں پہچانتا
+- **SLAM بڑی جگہوں میں بہہ جاتا ہے**: آپ کی simultaneous localization and mapping گوداموں میں ٹوٹ جاتی ہے
+- **کوئی GPU acceleration نہیں**: آپ کا Jetson یا embedded GPU بیکار بیٹھا ہے جبکہ CPU جدوجہد کر رہا ہے
+
+یہیں **NVIDIA Isaac** آتا ہے۔ یہ ROS 2 کا متبادل نہیں ہے—یہ ایک **سپرچارجڈ بہتری** ہے جو لاتی ہے:
+
+1. **Isaac Sim**: PhysX انجن کے ساتھ فوٹو ریئلسٹک سمولیشن اور RTX ray tracing
+2. **Isaac ROS**: حقیقی روبوٹوں پر تعیناتی کے لیے GPU سے تیز شدہ perception پیکجز
+3. **Pretrained AI Models**: آبجیکٹ ڈیٹیکشن، pose estimation، اور نیویگیشن کے لیے جدید ترین ماڈلز
+4. **Sim-to-Real Tools**: سمولیشن کے خلا کو پاٹنے کے لیے domain randomization اور synthetic data generation
+
+Isaac کو "AI-Robot Brain" کے طور پر سوچیں جو آپ کے روبوٹ کو انسانی رفتار سے دیکھنے، سمجھنے اور نیویگیٹ کرنے کے قابل بناتا ہے۔
+
+---
+
+## NVIDIA Isaac کیوں موجود ہے: یہ جو مسئلہ حل کرتا ہے
+
+آپ نے روبوٹ کمیونیکیشن کے لیے ROS 2 اور سمولیشن کے لیے Gazebo سیکھا ہے۔ تو ہمیں **NVIDIA Isaac** کی ضرورت کیوں ہے؟
+
+**چیلنج:** Physical AI کی ضرورت ہے:
+
+1. ویژن ماڈلز کی تربیت کے لیے **فوٹو ریئلسٹک سمولیشن**
+2. **GPU سے تیز شدہ perception** (آبجیکٹ ڈیٹیکشن، SLAM، segmentation)
+3. پیمانے پر **Synthetic data generation** (لاکھوں labeled تصاویر)
+4. فزکس اور بصری درستگی کے ساتھ **Sim-to-real transfer**
+5. edge devices (Jetson) پر **Hardware-accelerated inference**
+
+Gazebo فزکس فراہم کرتا ہے لیکن ان کی کمی ہے:
+- حقیقت پسند روشنی کے لیے GPU ray tracing
+- AI-native sensor simulation
+- پہلے سے تیار perception pipelines
+- NVIDIA hardware (Jetson، A100) کے ساتھ مضبوط انٹیگریشن
+
+**Isaac یہ حل کرتا ہے** NVIDIA GPUs کے لیے optimize شدہ مکمل AI robotics platform فراہم کر کے۔
+
+---
+
+## Isaac Ecosystem: دو تکمیلی اوزار
+
+NVIDIA Isaac دو اہم اجزاء پر مشتمل ہے جو مل کر کام کرتے ہیں:
+
+### 1. Isaac Sim: مجازی دنیا
+
+**Isaac Sim** NVIDIA Omniverse پر بنایا گیا ایک simulation environment ہے، جو روبوٹوں کی تربیت اور جانچ کے لیے ڈیزائن کیا گیا ہے۔
+
+**اہم خصوصیات:**
+
+- **Photorealistic Rendering**: زندگی جیسی روشنی، سائے، اور عکاسوں کے لیے RTX ray tracing
+- **Physics-Accurate Sensors**: کیمرہ distortion، LiDAR noise، depth sensor artifacts حقیقی ہارڈویئر سے مماثل
+- **Synthetic Data Generation**: خودکار طور پر ہزاروں labeled تربیتی تصاویر تیار کریں
+- **ROS 2 Integration**: sensor data شائع کرنے اور commands وصول کرنے کے لیے native bridges
+- **Domain Randomization**: حقیقی دنیا کی مضبوطی بہتر بنانے کے لیے textures، lighting، اور object positions کو بے ترتیب کریں
+
+**Isaac Sim کب استعمال کریں:**
+
+- synthetic data کے ساتھ vision models کی تربیت
+- پیچیدہ ماحول میں نیویگیشن کی جانچ (گودام، گھر، outdoor spaces)
+- ہارڈویئر بنانے سے پہلے نئے robot designs کا prototype بنانا
+- نایاب منظرناموں کے لیے datasets تیار کرنا (مثلاً، ہنگامی حالات میں fire extinguishers کا پتہ لگانا)
+
+### 2. Isaac ROS: Deployment Engine
+
+**Isaac ROS** حقیقی روبوٹوں پر perception اور navigation چلانے کے لیے GPU سے تیز شدہ ROS 2 packages کا مجموعہ ہے۔
+
+**اہم خصوصیات:**
+
+- **GPU Acceleration**: ماڈلز کو CPU سے 10-100x تیز چلانے کے لیے CUDA اور TensorRT کا فائدہ اٹھاتا ہے
+- **Hardware-Optimized**: NVIDIA Jetson (Nano، Xavier، Orin) اور discrete GPUs کے لیے ڈیزائن کیا گیا
+- **Standard ROS 2 Interface**: موجودہ ROS 2 perception nodes کے لیے drop-in replacements
+- **Pretrained Models**: object detection (DetectNet)، pose estimation (PoseNet)، اور depth estimation کے لیے استعمال کے لیے تیار ماڈلز
+
+**Isaac ROS کب استعمال کریں:**
+
+- resource-constrained robots پر vision systems تعینات کرنا
+- Real-time object detection اور tracking (30+ FPS)
+- Visual SLAM (Simultaneous Localization and Mapping)
+- Depth cameras کے ساتھ obstacle avoidance
+
+**تشبیہ:**
+
+- **Isaac Sim** پائلٹوں کے لیے flight simulator کی طرح ہے—محفوظ، قابل تکرار، اور حقیقت پسند۔
+- **Isaac ROS** حقیقی ہوائی جہاز میں autopilot system کی طرح ہے—real-time performance کے لیے optimize شدہ۔
+
+---
+
+## عمل میں Isaac Sim: آپ کی پہلی سمولیشن
+
+آئیے Isaac Sim سیٹ اپ کریں اور ایک سادہ robot simulation چلائیں۔
+
+### پیشگی تقاضے
+
+**System Requirements:**
+
+- **OS**: Ubuntu 20.04 یا 22.04
+- **GPU**: NVIDIA RTX GPU (RTX 2070 یا بہتر تجویز کیا جاتا ہے)
+- **RAM**: 32 GB تجویز کیا جاتا ہے
+- **Storage**: 50 GB خالی جگہ
+
+**انسٹالیشن:**
+
+Isaac Sim NVIDIA Omniverse کے ذریعے تقسیم کیا جاتا ہے۔ یہاں تیز ترین راستہ ہے:
+
+```bash
+# 1. Omniverse Launcher ڈاؤن لوڈ کریں
+# ملاحظہ کریں: https://www.nvidia.com/en-us/omniverse/download/
+# Launcher ڈاؤن لوڈ اور انسٹال کریں
+
+# 2. Omniverse Launcher سے Isaac Sim انسٹال کریں
+# Launcher کھولیں → Exchange → "Isaac Sim" تلاش کریں → Install
+
+# 3. ROS 2 Bridge انسٹال کریں (اگر ROS 2 استعمال کر رہے ہیں)
+# Isaac Sim میں، جائیں: Window → Extensions → "ROS Bridge" تلاش کریں → Enable
+```
+
+### مثال 1: Isaac Sim میں روبوٹ لوڈ کرنا
+
+Isaac Sim پہلے سے بنے robot models کے ساتھ آتا ہے۔ آئیے Franka Emika Panda robot arm لوڈ کریں۔
+
+**مراحل:**
+
+1. Omniverse Launcher سے Isaac Sim لانچ کریں
+2. جائیں: `Isaac Examples → Manipulation → Pick and Place`
+3. **Play** دبائیں (نیچے بائیں triangle button)
+
+آپ کو ایک robotic arm نظر آئے گا جو حقیقت پسند فزکس کے ساتھ اشیاء اٹھا اور رکھ رہا ہے!
+
+**پردے کے پیچھے کیا ہو رہا ہے:**
+
+- Isaac Sim روبوٹ کی URDF/USD (Universal Scene Description) فائل لوڈ کرتا ہے
+- PhysX engine collisions، gravity، اور joint dynamics کا حساب لگاتا ہے
+- RTX 60 FPS پر photorealistic visuals render کرتا ہے
+- مثال کا script robot controller کو joint commands بھیجتا ہے
+
+### مثال 2: ROS 2 Bridge کے ساتھ Custom World
+
+آئیے ایک custom scene بنائیں اور اسے ROS 2 سے جوڑیں۔
+
+**مرحلہ 1: ایک سادہ World بنائیں**
+
+```python
+# custom_world.py - Isaac Sim کے Script Editor میں چلائیں
+from omni.isaac.kit import SimulationApp
+
+# Isaac Sim کو شروع کریں
+simulation_app = SimulationApp({"headless": False})
+
+from omni.isaac.core import World
+from omni.isaac.core.objects import DynamicCuboid
+from omni.isaac.core.prims import RigidPrimView
+import numpy as np
+
+# ایک world بنائیں
+world = World()
+world.scene.add_default_ground_plane()
+
+# ایک cube شامل کریں جو کشش ثقل کی وجہ سے گرے گا
+cube = world.scene.add(
+    DynamicCuboid(
+        prim_path="/World/Cube",
+        name="cube",
+        position=np.array([0, 0, 1.0]),  # زمین سے 1 میٹر اوپر
+        scale=np.array([0.2, 0.2, 0.2]),  # 20cm cube
+        color=np.array([1.0, 0, 0]),      # سرخ
+    )
+)
+
+# سمولیشن کو reset اور چلائیں
+world.reset()
+
+print("Simulation ready! Press Play in the UI.")
+simulation_app.update()
+```
+
+**مرحلہ 2: ROS 2 Bridge کو فعال کریں**
+
+Isaac Sim UI میں:
+
+1. جائیں: `Window → Extensions → Third Party → ROS Bridge`
+2. Extension کو فعال کریں
+3. ROS Domain ID کو اپنے ROS 2 setup سے مماثل کرنے کے لیے سیٹ کریں (عام طور پر 0)
+
+**مرحلہ 3: Cube Position کو ROS 2 میں شائع کریں**
+
+```python
+# پچھلے script میں یہ شامل کریں
+from omni.isaac.core.utils.extensions import enable_extension
+enable_extension("omni.isaac.ros2_bridge")
+
+import rclpy
+from geometry_msgs.msg import Point
+
+# ROS 2 کو شروع کریں (loop کے باہر)
+rclpy.init()
+
+# ایک publisher بنائیں (یہ آپ کے ROS 2 node میں ہوگا)
+# عملی طور پر، Isaac Sim کا ROS bridge خودکار طور پر transforms شائع کرتا ہے
+# یہ ایک آسان مثال ہے
+
+while simulation_app.is_running():
+    world.step(render=True)  # فزکس اور render کو step کریں
+
+    # cube کی position حاصل کریں
+    cube_position, _ = cube.get_world_pose()
+
+    # ایک حقیقی setup میں، یہ ROS bridge کے ذریعے شائع ہوگا
+    print(f"Cube position: {cube_position}")
+
+simulation_app.close()
+```
+
+**آپ کیا دیکھیں گے:**
+
+- cube کشش ثقل کی وجہ سے گرتا ہے اور زمین پر اچھلتا ہے
+- ROS 2 میں، آپ real-time میں اس کی position حاصل کرنے کے لیے `/cube/transform` کو subscribe کر سکتے ہیں
+- یہ ظاہر کرتا ہے کہ Isaac Sim سمولیشن کو ROS 2 topics سے کیسے جوڑتا ہے
+
+---
+
+## Isaac ROS: Perception بجلی کی رفتار سے
+
+اب آئیے Isaac ROS استعمال کر کے حقیقی robot پر vision system تعینات کریں۔
+
+### Jetson یا Ubuntu پر انسٹالیشن
+
+Isaac ROS reproducibility کے لیے Docker containers میں چلتا ہے۔
+
+**مرحلہ 1: Docker اور NVIDIA Container Toolkit انسٹال کریں**
+
+```bash
+# Docker انسٹال کریں
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+
+# NVIDIA Container Toolkit انسٹال کریں (GPU access کے لیے)
+distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
+curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | sudo apt-key add -
+curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list | \
+  sudo tee /etc/apt/sources.list.d/nvidia-docker.list
+
+sudo apt-get update
+sudo apt-get install -y nvidia-docker2
+sudo systemctl restart docker
+```
+
+**مرحلہ 2: Isaac ROS Repositories Clone کریں**
+
+```bash
+mkdir -p ~/workspaces/isaac_ros/src
+cd ~/workspaces/isaac_ros/src
+
+# Isaac ROS common clone کریں (ضروری)
+git clone https://github.com/NVIDIA-ISAAC-ROS/isaac_ros_common.git
+
+# ایک perception package clone کریں (مثلاً، object detection)
+git clone https://github.com/NVIDIA-ISAAC-ROS/isaac_ros_object_detection.git
+
+# Depth perception package clone کریں (مثال)
+git clone https://github.com/NVIDIA-ISAAC-ROS/isaac_ros_depth_perception.git
+```
+
+**مرحلہ 3: Docker Container بنائیں**
+
+```bash
+cd ~/workspaces/isaac_ros
+
+# یہ script تمام dependencies کے ساتھ ایک Docker container بناتا ہے
+./src/isaac_ros_common/scripts/run_dev.sh
+```
+
+یہ پہلی run پر 20-30 منٹ لگ سکتا ہے۔ یہ ایک container بناتا ہے جس میں:
+
+- ROS 2 Humble
+- CUDA اور TensorRT
+- Isaac ROS packages پہلے سے بنے ہوئے
+
+### مثال: Real-Time Object Detection
+
+آئیے camera feed سے اشیاء کا پتہ لگانے کے لیے Isaac ROS استعمال کریں۔
+
+**منظرنامہ:**
+
+- آپ کے پاس USB camera کے ساتھ ایک robot ہے
+- آپ 30 FPS پر لوگوں اور اشیاء کا پتہ لگانا چاہتے ہیں
+- آپ Jetson Orin Nano (8 GB RAM، 6-core ARM CPU، 1024-core GPU) پر چل رہے ہیں
+
+**Launch File:**
+
+```bash
+# Isaac ROS Docker container کے اندر
+cd /workspaces/isaac_ros
+
+# پہلے سے تربیت یافتہ model کے ساتھ object detection لانچ کریں
+ros2 launch isaac_ros_detectnet isaac_ros_detectnet.launch.py \
+    model_name:=peoplenet \
+    input_topic:=/camera/image_raw \
+    output_topic:=/detections
+```
+
+**یہ کیا کرتا ہے:**
+
+1. `/camera/image_raw` کو subscribe کرتا ہے (آپ کا USB camera feed)
+2. `PeopleNet` model چلاتا ہے (لوگوں، bags، اور چہروں کا پتہ لگانے کے لیے پہلے سے تربیت یافتہ) GPU پر
+3. 30 FPS پر `/detections` میں bounding boxes شائع کرتا ہے
+
+**Detections کو بصری بنائیں:**
+
+```bash
+# دوسرے terminal میں (Docker کے باہر)
+ros2 run rqt_image_view rqt_image_view /detections_overlay
+```
+
+آپ کو real-time میں پتہ لگائے گئے لوگوں کے ارد گرد bounding boxes نظر آئیں گے!
+
+**Performance کا موازنہ:**
+
+| Platform | CPU-Only (OpenCV DNN) | Isaac ROS (GPU) |
+|----------|----------------------|-----------------|
+| Jetson Orin Nano | 3 FPS | 30 FPS |
+| Jetson AGX Orin | 5 FPS | 60 FPS |
+| RTX 4090 Desktop | 12 FPS | 120+ FPS |
+
+**Speedup کیوں؟**
+
+- **TensorRT**: NVIDIA hardware کے لیے neural network کو optimize کرتا ہے
+- **Zero-Copy Memory**: ڈیٹا GPU پر رہتا ہے؛ کوئی CPU↔GPU transfers نہیں
+- **INT8 Quantization**: 32-bit floats کی بجائے 8-bit integers استعمال کرتا ہے (4x چھوٹا، تیز)
+
+---
+
+## Core Isaac ROS Packages
+
+Isaac ROS مختلف perception کاموں کے لیے modular packages فراہم کرتا ہے۔
+
+### 1. Isaac ROS Image Segmentation
+
+تصاویر کو semantic categories میں تقسیم کرتا ہے (road، sidewalk، car، person)۔
+
+**Use Case:** Autonomous navigation—drivable surfaces بمقابلہ obstacles کی شناخت۔
+
+**مثال:**
+
+```bash
+ros2 launch isaac_ros_unet isaac_ros_unet.launch.py \
+    model_name:=peoplesemsegnet \
+    input_topic:=/camera/image \
+    output_topic:=/segmentation
+```
+
+**Output:** ہر pixel ایک class کے ساتھ labeled (0=background، 1=person، 2=vehicle، وغیرہ)
+
+### 2. Isaac ROS Depth Estimation
+
+Stereo cameras یا monocular images (AI استعمال کر کے) سے depth maps تیار کرتا ہے۔
+
+**Use Case:** مہنگے LiDAR کے بغیر obstacle avoidance۔
+
+**مثال:**
+
+```bash
+ros2 launch isaac_ros_ess isaac_ros_ess.launch.py \
+    left_image_topic:=/camera/left/image \
+    right_image_topic:=/camera/right/image \
+    depth_topic:=/depth
+```
+
+**Output:** Depth image جہاں brightness = distance (گہرا = قریب)
+
+### 3. Isaac ROS Visual SLAM
+
+Camera feeds استعمال کر کے Simultaneous Localization and Mapping۔
+
+**Use Case:** GPS کے بغیر indoor navigation۔
+
+**مثال:**
+
+```bash
+ros2 launch isaac_ros_visual_slam isaac_ros_visual_slam.launch.py \
+    camera_info_topic:=/camera/camera_info \
+    image_topic:=/camera/image
+```
+
+**Output:** `/odom` (robot position) اور `/map` (3D point cloud) شائع کرتا ہے
+
+**Traditional SLAM پر فوائد:**
+
+- **GPU-Accelerated**: 10x تیز feature extraction
+- **Motion Blur کے لیے مضبوط**: Deep learning مشکل حالات سنبھالتا ہے
+- **Loop Closure Detection**: drift کو درست کرنے کے لیے پہلے دیکھی گئی جگہوں کو پہچانتا ہے
+
+### 4. Isaac ROS Pose Estimation
+
+Real-time میں انسانی poses (skeleton keypoints) کا پتہ لگاتا ہے۔
+
+**Use Case:** Human-robot interaction—gestures کا پتہ لگانا، لوگوں کو track کرنا۔
+
+**مثال:**
+
+```bash
+ros2 launch isaac_ros_pose_estimation isaac_ros_pose_estimation.launch.py
+```
+
+**Output:** ہر شخص کے لیے 18 keypoints (سر، کندھے، کہنیاں، کلائیاں، کولہے، گھٹنے، ٹخنے)
+
+---
+
+## Sim-to-Real کو پاٹنا: Isaac Sim میں تربیت، Isaac ROS کے ساتھ تعیناتی
+
+Isaac کی ایک super power **sim-to-real pipeline** ہے: Isaac Sim میں AI models کی تربیت دیں، پھر انہیں Isaac ROS کے ساتھ حقیقی robots پر تعینات کریں۔
+
+### Sim-to-Real Gap کا مسئلہ
+
+**مسئلہ:**
+
+- Synthetic data پر تربیت یافتہ models اکثر حقیقی دنیا میں ناکام ہو جاتے ہیں
+- Lighting، textures، اور sensor noise سمولیشن اور حقیقت کے درمیان مختلف ہیں
+- اسے **domain gap** کہا جاتا ہے
+
+**Isaac کا حل: Domain Randomization**
+
+Model کو مضبوط بنانے کے لیے سمولیشن میں سب کچھ بے ترتیب کریں:
+
+- **Lighting**: brightness، color temperature، shadows میں تبدیلی
+- **Textures**: floor patterns، wall colors کو swap کریں
+- **Object Positions**: ہر تربیتی episode میں اشیاء کو بے ترتیب طور پر رکھیں
+- **Camera Parameters**: lens distortion، motion blur، noise شامل کریں
+
+**نتیجہ:** Model غیر متعلقہ تفصیلات کو نظر انداز کرنا اور کام سے متعلق features پر توجہ مرکوز کرنا سیکھتا ہے۔
+
+### مثال: Cube Detector کی تربیت
+
+**مقصد:** میز پر سرخ cubes کا پتہ لگائیں (pick-and-place کام کے لیے)۔
+
+**مرحلہ 1: Isaac Sim میں Synthetic Data تیار کریں**
+
+```python
+# domain_randomization.py - Isaac Sim میں چلائیں
+from omni.isaac.core import World
+from omni.isaac.core.objects import DynamicCuboid
+from omni.replicator.core import random_colors, random_position
+import omni.replicator.core as rep
+
+world = World()
+world.scene.add_default_ground_plane()
+
+# ایک table بنائیں
+table = world.scene.add(
+    DynamicCuboid(prim_path="/World/Table", position=[0.5, 0, 0.4],
+                  scale=[0.8, 1.2, 0.05], color=[0.5, 0.5, 0.5])
+)
+
+# Domain randomization: بے ترتیب positions/colors کے ساتھ cubes spawn کریں
+with rep.trigger.on_frame(num_frames=1000):
+    cube = rep.create.cube(
+        position=rep.distribution.uniform((-0.2, -0.3, 0.5), (0.2, 0.3, 0.6)),
+        scale=rep.distribution.uniform(0.05, 0.1),
+        color=rep.distribution.choice([
+            (1, 0, 0),      # سرخ (target)
+            (0, 1, 0),      # سبز (distractor)
+            (0, 0, 1),      # نیلا (distractor)
+        ])
+    )
+
+    # Lighting کو بے ترتیب کریں
+    rep.modify.light(intensity=rep.distribution.uniform(500, 2000))
+
+# Render اور labeled images save کریں
+rep.run()
+```
+
+**Output:** COCO format میں bounding box labels کے ساتھ 1000 تصاویر۔
+
+**مرحلہ 2: ایک Model کی تربیت دیں**
+
+DetectNet model کی تربیت کے لیے NVIDIA TAO Toolkit (Transfer Learning Toolkit) استعمال کریں:
+
+```bash
+# Synthetic data پر تربیت دیں (پہلے سے تربیت یافتہ weights سے transfer learning استعمال کرتا ہے)
+tao detectnet_v2 train \
+    -e /workspace/specs/detectnet_train.txt \
+    -r /workspace/output \
+    -k nvidia_tao  # Encryption key
+```
+
+**مرحلہ 3: Isaac ROS کے ساتھ Robot پر تعینات کریں**
+
+تربیت یافتہ model کو TensorRT format میں convert کریں اور تعینات کریں:
+
+```bash
+# TensorRT میں convert کریں (Jetson کے لیے optimize شدہ)
+tao detectnet_v2 export \
+    -m /workspace/output/weights/model.tlt \
+    -k nvidia_tao \
+    -o /workspace/models/cube_detector.engine
+
+# اپنے custom model کے ساتھ Isaac ROS لانچ کریں
+ros2 launch isaac_ros_detectnet isaac_ros_detectnet.launch.py \
+    model_path:=/workspace/models/cube_detector.engine \
+    input_topic:=/camera/image
+```
+
+**نتیجہ:** Jetson پر 30 FPS پر real-time cube detection، مکمل طور پر سمولیشن میں تربیت یافتہ!
+
+---
+
+## Jetson پر تعیناتی: Edge AI Platform
+
+NVIDIA Jetson embedded AI computers کا خاندان ہے جو robots کے لیے ڈیزائن کیا گیا ہے۔
+
+### Jetson خاندان کا جائزہ
+
+| Model | GPU Cores | RAM | Performance | Use Case |
+|-------|-----------|-----|-------------|----------|
+| Jetson Nano | 128 | 4 GB | 0.5 TFLOPS | Hobby robots، prototypes |
+| Jetson Xavier NX | 384 | 8 GB | 21 TOPS | Drones، mobile robots |
+| Jetson AGX Orin | 2048 | 64 GB | 275 TOPS | Humanoids، autonomous vehicles |
+
+**TOPS = Tera Operations Per Second** (AI inference کے لیے)
+
+### Humanoid Robots کے لیے Jetson کیوں؟
+
+1. **Power Efficiency**: 15-60W (desktop GPUs کے لیے 300W+ کے مقابلے میں)
+2. **Compact Size**: robot chassis کے اندر فٹ ہو جاتا ہے
+3. **Real-Time OS Support**: motor control کے لیے real-time kernels چلاتا ہے
+4. **Isaac ROS Optimized**: Jetson hardware کے لیے pre-tuned
+
+### مثال: Jetson پر Isaac ROS چلانا
+
+**منظرنامہ:** RealSense D435i camera کے ساتھ mobile robot پر visual SLAM تعینات کریں۔
+
+**Hardware:**
+
+- Jetson Orin Nano Developer Kit
+- Intel RealSense D435i (IMU کے ساتھ depth camera)
+- ROS 2 کے ساتھ mobile robot base
+
+**انسٹالیشن:**
+
+```bash
+# JetPack OS flash کریں (Ubuntu + CUDA + TensorRT)
+# SDK Manager ڈاؤن لوڈ کریں: https://developer.nvidia.com/sdk-manager
+
+# USB کے ذریعے Jetson کو connect کریں اور OS flash کریں
+# منتخب کریں: JetPack 6.0 (ROS 2 Humble شامل ہے)
+
+# Flashing کے بعد، Jetson میں SSH کریں
+ssh nvidia@jetson.local
+
+# Isaac ROS انسٹال کریں (پہلے جیسا Docker workflow)
+cd ~/workspaces/isaac_ros
+./src/isaac_ros_common/scripts/run_dev.sh
+```
+
+**SLAM لانچ کریں:**
+
+```bash
+# Docker container کے اندر
+ros2 launch isaac_ros_visual_slam isaac_ros_visual_slam_realsense.launch.py
+```
+
+**Performance کی نگرانی کریں:**
+
+```bash
+# دوسرے terminal میں
+jtop  # Jetson monitoring tool (انسٹال: sudo pip install jetson-stats)
+```
+
+آپ دیکھیں گے:
+
+- GPU utilization: 80-95%
+- SLAM 30 FPS پر چل رہا ہے
+- Power consumption: ~10W
+
+### Isaac Ecosystem
+
+NVIDIA Isaac دراصل **دو تکمیلی platforms** ہے:
+
+1. **Isaac Sim**: تربیت اور جانچ کے لیے photorealistic simulator
+2. **Isaac ROS**: تعیناتی کے لیے hardware-accelerated perception اور navigation
+
+```
+┌─────────────────────┐
+│    Isaac Sim        │ ← Photorealistic environments میں تربیت دیں
+│  (Omniverse-based)  │   Synthetic data تیار کریں
+└──────────┬──────────┘
+           │
+           │ Models export کریں
+           ↓
+┌──────────────────────┐
+│     Isaac ROS        │ ← حقیقی robots پر تعینات کریں (Jetson)
+│  (GPU-accelerated)   │   Real-time میں perception چلائیں
+└──────────────────────┘
+```
+
+آئیے ہر ایک کو تلاش کریں۔
+
+---
+
+## Isaac Sim: Photorealistic Robot Simulation
+
+**Isaac Sim** **NVIDIA Omniverse** پر بنایا گیا ہے، جو 3D collaboration اور simulation کے لیے ایک platform ہے۔ اسے Gazebo + Unity + AI tools کے مجموعے کے طور پر سوچیں۔
+
+### Isaac Sim کو کیا خاص بناتا ہے؟
+
+#### 1. RTX Ray Tracing
+
+NVIDIA RTX GPUs استعمال کر کے simulate کرتا ہے:
+
+- **Realistic lighting**: سائے، عکاسیں، refractions
+- **Global illumination**: روشنی حقیقت پسندانہ طور پر اچھلتی ہے
+- **Material properties**: شیشہ شیشے کی طرح نظر آتا ہے، دھات عکاسی کرتی ہے
+
+**یہ کیوں اہم ہے:** حقیقت پسند تصاویر پر تربیت یافتہ vision models حقیقت میں بہتر منتقل ہوتے ہیں۔
+
+**مثال:** Isaac Sim میں (حقیقت پسند روشنی کے ساتھ) cups کا پتہ لگانے کی تربیت یافتہ ایک robot آپ کی باورچی خانے میں cups کو بنیادی Gazebo models پر تربیت یافتہ سے بہتر پہچانے گا۔
+
+#### 2. PhysX 5.0 Physics Engine
+
+NVIDIA کا PhysX فراہم کرتا ہے:
+
+- **Accurate rigid body dynamics**
+- **Soft body simulation** (کپڑا، ربڑ)
+- **Fluid simulation** (پانی، تیل)
+- **Particle systems** (دھول، دھواں)
+
+**Use case:** ایک humanoid robot کو تولیہ تہہ کرتے (soft body) یا پانی ڈالتے (fluid) ہوئے simulate کریں۔
+
+#### 3. Synthetic Data Generation (SDG)
+
+خودکار طور پر لاکھوں labeled تربیتی مثالیں تیار کریں:
+
+- Random object placement
+- Varied lighting conditions
+- Automatic semantic segmentation
+- Pose estimation ground truth
+
+**فائدہ:** data کو دستی طور پر label کیے بغیر computer vision models کی تربیت دیں۔
+
+#### 4. USD (Universal Scene Description)
+
+Isaac Sim **USD** استعمال کرتا ہے، Pixar کا 3D scenes کے لیے کھلا format۔ اس کا مطلب ہے:
+
+- Blender، Maya، CAD software سے models import کریں
+- دوسرے Omniverse apps کے ساتھ scenes شیئر کریں
+- 3D environments کے لیے version control
+
+### Isaac Sim Architecture
+
+```
+┌─────────────────────────────────────┐
+│        Isaac Sim (Omniverse)        │
+│  ┌───────────┐      ┌────────────┐ │
+│  │  Physics  │      │  Rendering │ │
+│  │ (PhysX 5) │      │ (RTX/Path) │ │
+│  └─────┬─────┘      └──────┬─────┘ │
+│        │                   │        │
+│  ┌─────▼────────────────────▼─────┐ │
+│  │    USD Scene Graph             │ │
+│  │  (Robot, Environment, Sensors) │ │
+│  └─────┬──────────────────────────┘ │
+│        │                             │
+│  ┌─────▼─────┐                      │
+│  │ ROS Bridge│  ← ROS 2 سے جڑتا ہے │
+│  └───────────┘                      │
+└─────────────────────────────────────┘
+```
+
+---
+
+## Isaac Sim انسٹال کرنا
+
+Isaac Sim کو **RTX-capable NVIDIA GPU** کی ضرورت ہے (RTX 2060 یا اس سے اوپر تجویز کیا جاتا ہے)۔
+
+### System Requirements
+
+**کم سے کم:**
+- NVIDIA RTX 2060 (6GB VRAM)
+- 32GB RAM
+- Ubuntu 20.04/22.04 یا Windows 10/11
+
+**تجویز کردہ:**
+- NVIDIA RTX 3080/4080 (10-12GB VRAM)
+- 64GB RAM
+- Ubuntu 22.04
+
+### انسٹالیشن کے مراحل
+
+#### آپشن 1: Omniverse Launcher (آسان ترین)
+
+1. NVIDIA Omniverse Launcher ڈاؤن لوڈ کریں:
+   [https://www.nvidia.com/en-us/omniverse/download/](https://www.nvidia.com/en-us/omniverse/download/)
+
+2. Omniverse انسٹال اور لانچ کریں
+
+3. "Exchange" tab میں، **Isaac Sim** تلاش کریں اور "Install" پر کلک کریں
+
+4. انسٹال ہونے کے بعد، "Library" tab سے لانچ کریں
+
+#### آپشن 2: Docker (Servers/Cloud کے لیے)
+
+```bash
+# Isaac Sim container pull کریں
+docker pull nvcr.io/nvidia/isaac-sim:2023.1.0
+
+# Isaac Sim چلائیں (headless mode)
+docker run --gpus all -it \
+  -v ~/isaac-sim-data:/root/isaac-sim-data \
+  nvcr.io/nvidia/isaac-sim:2023.1.0 \
+  ./python.sh standalone_examples/api/omni.isaac.core/hello_world.py
+```
+
+#### آپشن 3: Native انسٹالیشن
+
+```bash
+# NVIDIA website سے ڈاؤن لوڈ کریں
+wget https://developer.nvidia.com/isaac-sim-download
+
+# Extract اور چلائیں
+./isaac-sim.sh
+```
+
+### انسٹالیشن کی تصدیق
+
+انسٹال ہونے کے بعد، Isaac Sim لانچ کریں۔ آپ کو نظر آنا چاہیے:
+
+1. **Viewport**: 3D scene view
+2. **Content Browser**: Assets لوڈ کریں
+3. **Stage**: Scene graph hierarchy
+4. **Property Panel**: Object settings
+
+ایک sample scene کھولنے کی کوشش کریں: `Isaac Examples > Simple Robot`.
+
+---
+
+## Isaac Sim بمقابلہ Isaac ROS: تقسیم کو سمجھنا
+
+یہ ابتدائیوں کو confuse کرتا ہے، تو آئیے واضح کریں:
+
+| خصوصیت | Isaac Sim | Isaac ROS |
+|---------|-----------|-----------|
+| **مقصد** | تربیت، جانچ، data generation | حقیقی robots پر تعیناتی |
+| **چلتا ہے** | Workstation (RTX GPU) | Jetson (embedded GPU) |
+| **رفتار** | سست (photorealistic rendering) | تیز (real-time کے لیے optimize شدہ) |
+| **Physics** | PhysX 5.0 (high fidelity) | Lightweight (صرف inference) |
+| **Output** | تربیت یافتہ models، synthetic data | Real-time perception نتائج |
+
+**Workflow:**
+
+1. Isaac Sim میں robot control **تیار کریں**
+2. Synthetic data کے ساتھ vision models کی **تربیت دیں**
+3. Models کو ONNX/TensorRT format میں **export کریں**
+4. Isaac ROS استعمال کر کے Jetson پر **تعینات کریں**
+
+---
+
+## Isaac کے ساتھ Perception: VSLAM اور Navigation
+
+**Perception** کا مطلب ہے sensors کے ذریعے environment کو سمجھنا۔ Isaac پہلے سے بنے perception pipelines فراہم کرتا ہے۔
+
+### Visual SLAM (VSLAM)
+
+**SLAM (Simultaneous Localization and Mapping)** دو سوالات کا جواب دیتا ہے:
+
+1. **میں کہاں ہوں؟** (Localization)
+2. **Environment کیسا نظر آتا ہے؟** (Mapping)
+
+**VSLAM** LiDAR کی بجائے cameras استعمال کرتا ہے۔
+
+**یہ کیسے کام کرتا ہے:**
+
+1. Robot حرکت کرتے ہوئے Camera تصاویر capture کرتا ہے
+2. Visual features (کونے، کنارے) کا پتہ لگائیں
+3. Motion کا اندازہ لگانے کے لیے frames میں features کو track کریں
+4. Feature positions کا 3D map بنائیں
+
+**Isaac فراہم کرتا ہے:** NVIDIA VPI (Vision Programming Interface) استعمال کر کے hardware-accelerated VSLAM۔
+
+```python
+# Isaac ROS VSLAM مثال
+from isaac_ros_visual_slam import VisualSlamNode
+
+# یہ node camera images پروسیس کرتا ہے اور output کرتا ہے:
+# - Robot pose (position + orientation)
+# - 3D point cloud map
+vslam = VisualSlamNode()
+```
+
+### Object Detection اور Segmentation
+
+Isaac NVIDIA **TAO Toolkit** (Train، Adapt، Optimize) کو vision AI کے لیے integrate کرتا ہے۔
+
+**مثال:** kitchen scene میں cups کا پتہ لگائیں۔
+
+```python
+# Isaac Sim: اشیاء کو خودکار طور پر annotate کریں
+import omni.syntheticdata as sd
+
+# Semantic segmentation کو فعال کریں
+sd.SyntheticData.Get().enable_semantic_label()
+
+# Synthetic data کے ساتھ detector کی تربیت دیں
+# Jetson کے لیے TensorRT میں export کریں
+```
+
+**Jetson پر:**
+
+```python
+from isaac_ros_dnn_inference import TensorRTNode
+
+# تربیت یافتہ model لوڈ کریں
+detector = TensorRTNode(model_path="cup_detector.trt")
+
+# Camera images پروسیس کریں
+detector.process_image(camera_image)
+```
+
+---
+
+## Isaac کے ساتھ Navigation: Nav2 اور Path Planning
+
+**Navigation** کا مطلب ہے رکاوٹوں سے بچتے ہوئے point A سے point B تک جانا۔
+
+### Nav2: ROS 2 Navigation Stack
+
+Nav2 صنعتی معیار کا navigation framework ہے۔ Isaac فراہم کرتا ہے:
+
+- **GPU-accelerated costmap generation** (تیز obstacle detection)
+- **Optimized path planning** algorithms
+- پیچیدہ navigation logic کے لیے **Behavior trees**
+
+**مثال workflow:**
+
+1. Map بنانے کے لیے VSLAM استعمال کریں
+2. Nav2 collision-free path کی منصوبہ بندی کرتا ہے
+3. Robot path کی پیروی کرتا ہے، اگر رکاوٹیں ظاہر ہوں تو دوبارہ منصوبہ بندی کرتا ہے
+
+```python
+# Isaac ROS Nav2 مثال
+from nav2_simple_commander.robot_navigator import BasicNavigator
+
+nav = BasicNavigator()
+
+# Goal position سیٹ کریں
+goal_pose = PoseStamped()
+goal_pose.pose.position.x = 5.0
+goal_pose.pose.position.y = 2.0
+
+nav.goToPose(goal_pose)
+
+# Nav2 path planning اور obstacle avoidance سنبھالتا ہے
+```
+
+### Humanoids کے لیے Bipedal Locomotion
+
+Humanoid robots **bipedal locomotion** (دو پیروں پر چلنا) استعمال کرتے ہیں، جو wheeled navigation سے بہت مشکل ہے۔
+
+**چیلنجز:**
+
+- **توازن**: center of mass کو support foot کے اوپر برقرار رکھنا ضروری ہے
+- **Dynamic stability**: disturbances (دھکے، ناہموار زمین) کو سنبھالنا
+- **Coordination**: 12+ leg joints کو synchronize کرنا
+
+Isaac فراہم کرتا ہے:
+
+- **Humanoid character controllers** (پہلے سے بنے walking gaits)
+- Custom gaits کی تربیت کے لیے **Reinforcement learning** environments
+- بازوؤں + ٹانگوں کو coordinate کرنے والا **Whole-body control**
+
+**مثال:** Isaac Sim میں humanoid کو چلنا سکھائیں، policy export کریں، Unitree G1 پر تعینات کریں۔
+
+---
+
+## Sim-to-Real: Isaac کا فائدہ
+
+**Sim-to-real transfer** Isaac کی بنیادی طاقت ہے۔ یہاں یہ خلا کو کیسے پاٹتا ہے:
+
+### 1. Domain Randomization (Built-In)
+
+Isaac Sim domain randomization کو خودکار کرتا ہے:
+
+```python
+from omni.isaac.core.utils.randomization import Randomizer
+
+# Lighting کو بے ترتیب کریں
+Randomizer.randomize_lighting(intensity_range=(0.5, 1.5))
+
+# Object textures کو بے ترتیب کریں
+Randomizer.randomize_material(object_list=["table", "cup"])
+
+# Camera position کو بے ترتیب کریں
+Randomizer.randomize_camera_pose(noise_std=0.05)
+```
+
+**فائدہ:** Models مضبوط features سیکھتے ہیں، مخصوص scenes کو یاد نہیں کرتے۔
+
+### 2. Noise کے ساتھ Sensor Simulation
+
+Isaac حقیقی sensor imperfections کو simulate کرتا ہے:
+
+- **Camera**: Lens distortion، motion blur، rolling shutter
+- **LiDAR**: Range noise، beam divergence
+- **IMU**: Bias drift، temperature effects
+
+```python
+# Isaac Sim میں حقیقت پسند camera noise شامل کریں
+camera.set_noise_model(
+    noise_type="gaussian",
+    mean=0.0,
+    stddev=0.02  # 2% noise
+)
+```
+
+### 3. Physics Calibration
+
+Simulation physics کو حقیقی robot سے match کریں:
+
+```python
+# حقیقی robot parameters ناپیں
+real_mass = 2.5  # kg
+real_friction = 0.75
+
+# Isaac Sim میں سیٹ کریں
+robot.set_mass(real_mass)
+robot.set_friction_coefficient(real_friction)
+```
+
+### 4. Hardware-in-the-Loop Testing
+
+مکمل robot پر تعینات کرنے سے **پہلے** Jetson hardware پر test کریں:
+
+1. Workstation پر Isaac Sim چلائیں
+2. Network پر Jetson کو sensor data stream کریں
+3. Jetson perception/control چلاتا ہے
+4. Commands simulation کو واپس بھیجے جاتے ہیں
+
+**تصدیق کرتا ہے:** کیا code Jetson پر کافی تیز چلتا ہے؟
+
+---
+
+## Jetson پر تعیناتی: Isaac ROS
+
+ایک بار جب آپ کا model Isaac Sim میں کام کرتا ہے، تو **Jetson** (NVIDIA کے embedded AI platform) پر تعینات کریں۔
+
+### Jetson کیا ہے؟
+
+**Jetson** edge AI computers کا خاندان ہے:
+
+- **Jetson Orin Nano**: 40 TOPS، $249 (طلباء/سیکھنے کے لیے)
+- **Jetson Orin NX**: 100 TOPS، $499 (پیداوار)
+- **Jetson AGX Orin**: 275 TOPS، $1,999 (اعلیٰ درجے کے robots)
+
+**TOPS (Tera Operations Per Second):** AI performance کی پیمائش۔
+
+### Jetson پر Isaac ROS انسٹال کرنا
+
+```bash
+# JetPack flash کریں (Ubuntu + CUDA + TensorRT شامل ہے)
+# یہاں سے ڈاؤن لوڈ کریں: https://developer.nvidia.com/embedded/jetpack
+
+# Isaac ROS انسٹال کریں
+sudo apt update
+sudo apt install ros-humble-isaac-ros-visual-slam
+sudo apt install ros-humble-isaac-ros-dnn-inference
+
+# انسٹالیشن کی تصدیق کریں
+ros2 pkg list | grep isaac_ros
+```
+
+### Jetson پر Perception چلانا
+
+```python
+# vslam_jetson.py
+import rclpy
+from isaac_ros_visual_slam import VisualSlamNode
+
+rclpy.init()
+
+# VSLAM node بنائیں (Jetson GPU پر hardware-accelerated)
+vslam = VisualSlamNode()
+
+# Camera کو subscribe کریں
+vslam.subscribe_to_camera('/camera/image_raw')
+
+# Pose estimates شائع کریں
+vslam.publish_pose('/robot/pose')
+
+rclpy.spin(vslam)
+```
+
+**Performance:** Isaac ROS Jetson Orin Nano پر **30 FPS** پر VSLAM چلاتا ہے (CPU-only SLAM کے ساتھ 5 FPS کے مقابلے میں)۔
+
+---
+
+## آپ کا پہلا Isaac Sim Project: روبوٹ کو حرکت دینا
+
+آئیے ایک سادہ project بنائیں: ROS 2 استعمال کر کے Isaac Sim میں robot کو control کریں۔
+
+### مرحلہ 1: Isaac Sim کھولیں اور Robot لوڈ کریں
+
+1. Isaac Sim لانچ کریں
+2. جائیں `Isaac Examples > Carter Warehouse` (گودام میں ایک wheeled robot)
+3. سمولیشن شروع کرنے کے لیے "Play" پر کلک کریں
+
+### مرحلہ 2: ROS 2 Bridge فعال کریں
+
+```python
+# Isaac Sim Python console میں
+from omni.isaac.core.utils.extensions import enable_extension
+
+enable_extension("omni.isaac.ros2_bridge")
+```
+
+اب Isaac Sim ROS 2 topics جیسے `/cmd_vel` (velocity commands) شائع کرتا ہے۔
+
+### مرحلہ 3: ROS 2 سے Control کریں
+
+```bash
+# ایک terminal میں (Isaac Sim کے باہر)
+ros2 topic pub /cmd_vel geometry_msgs/Twist \
+  "{linear: {x: 1.0}, angular: {z: 0.5}}"
+```
+
+Robot آگے بڑھتا ہے اور مڑتا ہے!
+
+### مرحلہ 4: Camera شامل کریں
+
+```python
+# Robot میں camera sensor شامل کریں
+from omni.isaac.sensor import Camera
+
+camera = Camera(
+    prim_path="/World/Carter/camera",
+    position=[0.3, 0, 0.2],
+    frequency=30  # 30 FPS
+)
+
+camera.initialize()
+```
+
+اب تصاویر `/camera/image_raw` میں شائع ہوتی ہیں۔
+
+---
+
+## تصوراتی جائزہ: Jetson Deployment
+
+Jetson پر تعینات کرتے وقت:
+
+1. **Model Export**: تربیت یافتہ models کو TensorRT format میں convert کریں (Jetson کے لیے optimize شدہ)
+2. **ROS 2 Integration**: Perception کے لیے Isaac ROS nodes استعمال کریں
+3. **Hardware Interfacing**: Cameras، IMUs کو Jetson سے connect کریں
+4. **Real-time Control**: یقینی بنائیں کہ perception ضروری frame rate پر چلتا ہے
+
+**مثال pipeline:**
+
+```
+RealSense Camera (USB)
+        ↓
+Jetson Orin Nano
+        ↓
+Isaac ROS VSLAM (30 FPS)
+        ↓
+Nav2 Path Planning
+        ↓
+Motor Commands (ROS 2 کے ذریعے)
+        ↓
+Unitree G1 Humanoid
+```
+
+---
+
+## اہم نکات
+
+1. **Isaac Sim** photorealistic virtual environments میں robots کی تربیت اور جانچ کے لیے ہے
+2. **Isaac ROS** حقیقی robots (خاص طور پر Jetson) پر GPU سے تیز شدہ perception تعینات کرنے کے لیے ہے
+3. **Domain randomization** variations کے لیے models کو مضبوط بنا کر sim-to-real gap کو پاٹتا ہے
+4. **TensorRT** NVIDIA hardware پر neural networks کو 10-100x speedups کے لیے optimize کرتا ہے
+5. **Jetson** power-efficient، real-time robotics کے لیے embedded AI platform ہے
+6. Isaac **ROS 2** کے ساتھ بغیر کسی رکاوٹ کے مربوط ہوتا ہے—یہ متبادل نہیں، بہتری ہے
+
+---
+
+## ہاتھ سے عملی مشق
+
+### ورزش 1: Isaac Sim Examples تلاش کریں
+
+1. Omniverse Launcher کے ذریعے Isaac Sim انسٹال کریں
+2. چلائیں: `Isaac Examples → Manipulation → Franka Pick and Place`
+3. Cube کا رنگ نیلا کرنے کے لیے script میں ترمیم کریں
+
+**اشارہ:** مثال کے code میں `color` parameter تلاش کریں۔
+
+### ورزش 2: Performance Gain کا حساب لگائیں
+
+اگر ایک vision model Jetson CPU پر 5 FPS پر اور Isaac ROS GPU acceleration کے ساتھ 50 FPS پر چلتا ہے:
+
+- Speedup factor کیا ہے؟
+- اگر robot کو real-time operation کے لیے 30 FPS کی ضرورت ہے، تو کیا CPU-only قابل عمل ہے؟
+
+### ورزش 3: Sim-to-Real Pipeline ڈیزائن کریں
+
+آپ عمارتوں میں fire extinguishers کا پتہ لگانے کے لیے robot کی تربیت دینا چاہتے ہیں۔
+
+**سوال:** Model کو مضبوط بنانے کے لیے Isaac Sim میں آپ کیا بے ترتیب کریں گے؟
+
+**اشارہ:** Lighting (دن/رات)، backgrounds (دیواریں، فرنیچر)، اور fire extinguisher کے رنگ/شکلوں کے بارے میں سوچیں۔
+
+### ورزش 4: Jetson کا انتخاب
+
+آپ ایک quadruped robot بنا رہے ہیں جسے ضرورت ہے:
+
+- 30 FPS پر visual SLAM چلانا
+- 20 FPS پر YOLO کے ساتھ اشیاء کا پتہ لگانا
+- بیٹری پر 2 گھنٹے چلنا (power budget: زیادہ سے زیادہ 20W)
+
+**سوال:** آپ کون سا Jetson model منتخب کریں گے؟ کیوں؟
+
+---
+
+## عام غلطیاں جو ابتدائی کرتے ہیں
+
+1. **Domain randomization استعمال نہیں کرنا**: Isaac Sim میں ایک منظر پر تربیت دینا overfitting کا باعث بنتا ہے
+2. **TensorRT conversion چھوڑنا**: Jetson پر PyTorch models کو براہ راست چلانا 10x سست ہے
+3. **Sensor parameters کو نظر انداز کرنا**: Isaac Sim کی default camera settings آپ کے حقیقی camera سے مماثل نہیں ہو سکتیں (ٹھیک کریں: calibrate اور intrinsics کو match کریں)
+4. **Jetson کو overload کرنا**: بیک وقت بہت سارے models چلانا thermal throttling کا باعث بنتا ہے
+5. **ROS 2 Bridge setup بھولنا**: Isaac Sim ROS 2 کے ساتھ communicate نہیں کرے گا جب تک bridge extension فعال نہ ہو
+
+---
+
+## آگے کیا ہے؟
+
+اگلے باب میں، ہم:
+
+- Isaac Sim میں custom object detection model بنائیں گے
+- اسے TensorRT میں export کریں گے
+- Isaac ROS کے ساتھ حقیقی robot پر تعینات کریں گے
+- Pick-and-place کاموں کے لیے MoveIt 2 کے ساتھ integrate کریں گے
+
+اب آپ نے NVIDIA Isaac کی بنیاد سیکھ لی ہے۔ اگلا، ہم ایک حقیقی دنیا کا AI robotics system بنائیں گے!
+
+---
+
+**گہری سیکھنے کے لیے وسائل:**
+
+- [NVIDIA Isaac Sim Documentation](https://docs.omniverse.nvidia.com/app_isaacsim/app_isaacsim/overview.html)
+- [Isaac ROS GitHub](https://github.com/NVIDIA-ISAAC-ROS)
+- [Jetson Developer Zone](https://developer.nvidia.com/embedded/jetson)
+- [TAO Toolkit (Training)](https://developer.nvidia.com/tao-toolkit)

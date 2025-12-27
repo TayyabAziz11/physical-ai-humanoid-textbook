@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styles from './ChatPanelPlaceholder.module.css'; // Reuse existing styles
 import { queryGlobal, querySelection } from '@site/src/utils/chat-api';
+import { fixSourceLink, useBaseUrl } from '@site/src/utils/sourceLinks';
 
 export interface ChatWidgetProps {
   isOpen: boolean;
@@ -39,6 +40,7 @@ export default function ChatWidget({
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [capturedSelection, setCapturedSelection] = useState('');
+  const baseUrl = useBaseUrl();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -246,21 +248,25 @@ export default function ChatWidget({
                         <div className={styles.citationsHeader}>
                           📖 Sources:
                         </div>
-                        {message.citations.map((citation, idx) => (
-                          <div key={idx} className={styles.citation}>
-                            <a
-                              href={citation.link_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              {citation.section_title}
-                            </a>
-                            {' '}
-                            <span className={styles.citationSource}>
-                              ({citation.source_file})
-                            </span>
-                          </div>
-                        ))}
+                        {message.citations.map((citation, idx) => {
+                          // Fix source link to work with Docusaurus baseUrl
+                          const fixedUrl = fixSourceLink(citation.link_url, baseUrl);
+
+                          return (
+                            <div key={idx} className={styles.citation}>
+                              <a
+                                href={fixedUrl}
+                                rel="noopener noreferrer"
+                              >
+                                {citation.section_title}
+                              </a>
+                              {' '}
+                              <span className={styles.citationSource}>
+                                ({citation.source_file})
+                              </span>
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
                   </div>

@@ -25,12 +25,48 @@ const config: Config = {
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
 
-  // Even if you don't use internationalization, you can use this field to set
-  // useful metadata like html lang. For example, if your site is Chinese, you
-  // may want to replace "en" with "zh-Hans".
+  // Internationalization with local translation files (Docusaurus official i18n)
   i18n: {
     defaultLocale: 'en',
-    locales: ['en'],
+    locales: ['en', 'ur'], // Only English and Urdu have full translations
+    localeConfigs: {
+      en: {
+        label: 'English',
+        direction: 'ltr',
+        htmlLang: 'en-US',
+      },
+      ur: {
+        label: 'اردو',
+        direction: 'rtl',
+        htmlLang: 'ur',
+      },
+      // Future locales (uncomment when translations are ready):
+      // ja: {
+      //   label: '日本語',
+      //   direction: 'ltr',
+      //   htmlLang: 'ja',
+      // },
+      // es: {
+      //   label: 'Español',
+      //   direction: 'ltr',
+      //   htmlLang: 'es-ES',
+      // },
+      // ar: {
+      //   label: 'العربية',
+      //   direction: 'rtl',
+      //   htmlLang: 'ar',
+      // },
+      // fr: {
+      //   label: 'Français',
+      //   direction: 'ltr',
+      //   htmlLang: 'fr-FR',
+      // },
+      // 'zh-Hans': {
+      //   label: '中文',
+      //   direction: 'ltr',
+      //   htmlLang: 'zh-CN',
+      // },
+    },
   },
 
   // Custom head tags for cache-busting and version metadata
@@ -124,6 +160,10 @@ const config: Config = {
           to: '/chat',
           label: 'Study Assistant',
           position: 'left',
+        },
+        {
+          type: 'localeDropdown',
+          position: 'right',
         },
         {
           href: 'https://github.com/TayyabAziz11',

@@ -23,19 +23,16 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-<<<<<<< HEAD
 # Python Backend
 backend/.env
 backend/.env.*
 !backend/.env.example
 backend/.venv/
+backend/venv/
+venv/
 backend/__pycache__/
 backend/**/__pycache__/
 backend/.pytest_cache/
 backend/dist/
 backend/*.egg-info/
 backend/uv.lock
-=======
-venv/
-backend/venv/
->>>>>>> 001-docusaurus-frontend

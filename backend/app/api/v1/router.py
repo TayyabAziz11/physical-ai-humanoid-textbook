@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import admin, query
+from app.api.v1.endpoints import admin, query, translate
 
 # Create main v1 router
 api_router = APIRouter()
@@ -19,4 +19,11 @@ api_router.include_router(
     admin.router,
     prefix="/admin",
     tags=["Admin"],
+)
+
+# Include translation endpoints
+api_router.include_router(
+    translate.router,
+    prefix="/translate",
+    tags=["Translation"],
 )

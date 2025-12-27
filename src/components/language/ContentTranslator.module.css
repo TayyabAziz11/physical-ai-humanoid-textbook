@@ -1,0 +1,91 @@
+/**
+ * Styles for ContentTranslator component
+ */
+
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  min-height: 200px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--ifm-color-emphasis-300);
+  border-top-color: var(--ifm-color-primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loadingText {
+  margin-top: 16px;
+  color: var(--ifm-color-emphasis-700);
+  font-size: 14px;
+}
+
+.errorBanner {
+  padding: 12px 16px;
+  background-color: var(--ifm-color-warning-contrast-background);
+  color: var(--ifm-color-warning-contrast-foreground);
+  border-left: 4px solid var(--ifm-color-warning);
+  border-radius: 4px;
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+.translatedContent {
+  position: relative;
+}
+
+.translationBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  background-color: var(--ifm-color-primary-lightest);
+  color: var(--ifm-color-primary-darkest);
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  margin-bottom: 16px;
+  text-transform: capitalize;
+}
+
+.translatedContent p {
+  margin-bottom: 1em;
+  line-height: 1.6;
+}
+
+.translatedContent p:last-child {
+  margin-bottom: 0;
+}
+
+/* RTL support */
+[dir='rtl'] .errorBanner {
+  border-left: none;
+  border-right: 4px solid var(--ifm-color-warning);
+}
+
+[dir='rtl'] .translatedContent {
+  text-align: right;
+}
+
+/* Dark mode */
+[data-theme='dark'] .errorBanner {
+  background-color: rgba(255, 193, 7, 0.1);
+  color: var(--ifm-color-warning-lightest);
+}
+
+[data-theme='dark'] .translationBadge {
+  background-color: var(--ifm-color-primary-darkest);
+  color: var(--ifm-color-primary-lightest);
+}
